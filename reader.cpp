@@ -9,6 +9,12 @@ static bool tog_on = false;
 
 static pthread_t tog_thread;
 
+#if defined( WITH_INOTIFY )
+# include <sys/inotify.h>
+static int inf_fd;
+static int watch_fd;
+#endif
+
 static void tog_signal(int sig)
 {
 	if (sig == SIGUSR1)
@@ -22,7 +28,47 @@ static void *tog_func(void *ign)
 	char dat[8];
 	tog_on = true;
 	signal(SIGUSR1, tog_signal);
+
+	struct stat st;
+	if (lstat(toggle_file, &st) != 0) {
+		cErr << "stat failed on " << toggle_file << ": " << err << endl;
+		tog_on = false;
+	}
+	else
+	{
+	#if !defined( WITH_INOTIFY )
+		if (!S_ISFIFO(st.st_mode)) {
+			cerr << "The toggle file is not a fifo, and inotify support has not been compiled in." << endl;
+			cerr << "This is evil, please compile with inotify support." << endl;
+			tog_on = false;
+		}
+	#else
+		inf_fd = inotify_init();
+		if (inf_fd == -1) {
+			cErr << "inotify_init failed: " << err << endl;
+			tog_on = false;
+		} else {
+			watch_fd = inotify_add_watch(inf_fd, toggle_file, IN_CLOSE_WRITE | IN_CREATE);
+			if (watch_fd == -1) {
+				cErr << "inotify_add_watch failed: " << err << endl;
+				tog_on = false;
+			}
+		}
+	#endif
+	}
+
 	while (tog_on) {
+#if defined( WITH_INOTIFY )
+		inotify_event iev;
+		if (read(inf_fd, &iev, sizeof(iev)) != (ssize_t)sizeof(iev)) {
+			cErr << "Failed to read from inotify watch: " << err << endl;
+			break;
+		}
+		if (iev.wd != watch_fd) {
+			cerr << "Inotify sent is bogus information..." << endl;
+			continue;
+		}
+#endif
 		tfd = open(toggle_file, O_RDONLY);
 		if (tfd < 0) {
 			cErr << "Failed to open fifo '" << toggle_file << "': " << err << endl;
