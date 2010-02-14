@@ -9,13 +9,14 @@ static bool tog_on = false;
 
 static pthread_t tog_thread;
 
-void tog_signal(int sig)
+static void tog_signal(int sig)
 {
 	if (sig == SIGUSR1)
 		tog_on = false;
 }
 
-void *tog_func(void *ign)
+static void toggle_hook();
+static void *tog_func(void *ign)
 {
 	int tfd;
 	char dat[8];
@@ -28,16 +29,7 @@ void *tog_func(void *ign)
 		bool r = !!atoi(dat);
 		if (on != r) {
 			on = r;
-			if (toggle_cmd) {
-				std::string tcmd("GRAB=");
-				tcmd.append( on ? "1 " : "0 " );
-				tcmd.append(toggle_cmd);
-				if (!fork()) {
-					execlp("sh", "sh", "-c", tcmd.c_str(), NULL);
-					cErr << "Failed to run command: " << err << endl;
-					exit(1);
-				}
-			}
+			toggle_hook();
 		}
 	}
 
@@ -45,9 +37,21 @@ void *tog_func(void *ign)
 	return 0;
 }
 
-void toggle()
+static void toggle_hook()
 {
-	
+	if (ioctl(fd, EVIOCGRAB, (void*)(int)on) == -1) {
+		cErr << "Grab failed: " << err << endl;
+	}
+       	if (toggle_cmd) {
+       		std::string tcmd("GRAB=");
+       		tcmd.append( on ? "1 " : "0 " );
+       		tcmd.append(toggle_cmd);
+       		if (!fork()) {
+       			execlp("sh", "sh", "-c", tcmd.c_str(), NULL);
+       			cErr << "Failed to run command: " << err << endl;
+       			exit(1);
+       		}
+       	}
 }
 
 int read_device(const char *devfile)
@@ -168,10 +172,9 @@ int read_device(const char *devfile)
 		}
 
 		if (ev.type == EV_KEY && ev.code == 161) {
-			if (ev.value == 0)
+			if (ev.value == 0) {
 				on = !on;
-			if (ioctl(fd, EVIOCGRAB, (void*)(int)on) == -1) {
-				cErr << "Grab failed: " << err << endl;
+				toggle_hook();
 			}
 		} else if (on) {
 			cout.write((const char*)&ev, sizeof(ev));
