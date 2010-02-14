@@ -26,8 +26,8 @@ int main(int argc, char **argv)
 	
 	memset(input_bits, 0, sizeof(input_bits));
 
-	std::string command(argv[1]);
 	while (1) {
+		std::string command(argv[1]);
 		if (command == "-read") {
         		if (argc < 3)
 				usage(arg0);
@@ -50,5 +50,7 @@ int main(int argc, char **argv)
 			argv += 2;
 			argc -= 2;
 		}
+		else
+			usage(arg0);
 	}
 }
