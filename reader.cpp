@@ -1,13 +1,57 @@
 #include "main.h"
 
+#include <signal.h>
+
+static bool on = true;
+static int fd = 0;
+
+pthread_t tog_thread;
+bool tog_on = false;
+
+void tog_signal(int sig)
+{
+	if (sig == SIGUSR1)
+		tog_on = false;
+}
+
+void *tog_func(void *ign)
+{
+	int tfd;
+	char dat[8];
+	tog_on = true;
+	signal(SIGUSR1, tog_signal);
+	while (tog_on) {
+		tfd = open(toggle_file, O_RDONLY);
+		read(tfd, dat, sizeof(dat));
+		dat[sizeof(dat)-1] = 0;
+		bool r = !!atoi(dat);
+		if (on != r) {
+			on = r;
+			if (toggle_cmd) {
+				std::string tcmd("GRAB=");
+				tcmd.append( on ? "1 " : "0 " );
+				tcmd.append(toggle_cmd);
+				if (!fork()) {
+					execlp("sh", "sh", "-c", tcmd.c_str(), NULL);
+					cErr << "Failed to run command: " << err << endl;
+					exit(1);
+				}
+			}
+		}
+	}
+
+	tog_on = on = false;
+	return 0;
+}
+
 int read_device(const char *devfile)
 {
 	struct input_event ev;
 	size_t i;
 	ssize_t s;
 	int e = 0;
-	bool on = true;
-	int fd = open(devfile, O_RDONLY);
+	on = true;
+	fd = open(devfile, O_RDONLY);
 
 	if (fd < 0) {
 		std::string err(strerror(errno));
@@ -97,8 +141,16 @@ int read_device(const char *devfile)
 	}
 
 	cout.flush();
+
+	if (toggle_file) {
+		if (pthread_create(&tog_thread, 0, &tog_func, 0) != 0) {
+			cErr << "Failed to create toggling-thread: " << err << endl;
+			goto error;
+		}
+        }
+
 	cerr << "Transferring input events." << endl;
-	while (true) {
+	while (on) {
 		s = read(fd, &ev, sizeof(ev));
 		if (!s) {
 			cerr << "EOF" << endl;
@@ -125,6 +177,8 @@ int read_device(const char *devfile)
 error:
 	e = 1;
 end:
+	if (tog_on)
+		pthread_cancel(tog_thread);
 	ioctl(fd, EVIOCGRAB, (void*)0);
 	close(fd);
 

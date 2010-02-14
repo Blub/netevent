@@ -1,6 +1,6 @@
 CXX = g++
-CFLAGS = -Wall
-LDFLAGS = -g
+CFLAGS = -Wall -pthread
+LDFLAGS = -g -pthread
 
 SOURCES = main.cpp reader.cpp write.cpp
 

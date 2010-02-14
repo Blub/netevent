@@ -21,5 +21,7 @@ using std::cin;
 #define testbit(in, bit) (!!( ((in)[bit/8]) & (1<<(bit&7)) ))
 
 extern unsigned char input_bits[1+EV_MAX/8];
+extern const char *toggle_file;
+extern const char *toggle_cmd;
 
 #endif
