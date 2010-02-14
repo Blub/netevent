@@ -1,0 +1,62 @@
+License:
+	See the LICENSE file.
+
+Compilation:
+	Simply run make, or compile the .cpp files (with pthread support) into a binary.
+
+Installation:
+	Put the netevent binary wherever you want it...
+
+Usage:
+	This tool operates in 2 modes:
+	./netevent [-toggler <toggle file>] [-ontoggle <shell command>] -read <device file>
+	./netevent -write <device file>
+
+Read Mode:
+	In read mode, it opens an event file, grabs it, and dumps its capabilities, and then
+	all its events as binary data to stdout.
+	NOTE:
+	  Currently, the KEY event 161 (the eject key on apple wireless keyboards) is hardcoded
+          as a key to toggle it on/off.
+	
+	In this mode, the -toggler parameter specifies a file which is read (over and over again)
+	which causes the program to either ungrab or (re-)grab the event device. If the file contains
+	data which corresponds to "false" (ie. a zero digit), the device is released, and no events
+	are sent to stdout. On "true" (ie. a 1 digit), the device is re-grabbed, and the events passed
+	to stdout again.
+	The -ontoggle option can be used to execute a shell command whenever the device is grabbed
+	or ungrabbed. The command is executed using "sh -c", and the environment variable GRAB is set
+	to 0 when un-grabbed, or 1 when grabbed.
+	This can be used to chain multiple devices together.
+
+	Example:
+	  Machine where the devices are connected to physically:
+	    mkfifo ~/toggler
+	    ./netevent -toggler ~/maintoggler -ontoggle 'echo $GRAB > ~/toggler' \
+	        -read /dev/input/event7 | netcat -t 192.168.0.50 1955 &
+	    ./netevent -toggler ~/toggler -read /dev/input/event15 | netcat -t 192.168.0.50 1956
+
+	  Other machine (192.168.0.50 in our case)
+	    netcat -t -l -p 1955 | ./netevent -write &
+	    netcat -t -l -p 1956 | ./netevent -write
+
+	  In this example, one machine simply waits on ports 1955 and 1956 for a device to connect, and
+	  the other machine reads from 2 devices, /dev/input/event7 and 15.
+	  Whenever the even7 devices is toggled using for example:
+	    echo 0 > ~/maintoggler
+	  It also executes 'echo $GRAB > ~/toggler' which sets the second netevent process to also ungrab
+	  or grab its device, thus, the two devices work together.
+
+	  Of course, instead of a fifo you could just use a normal file, and have both read from the
+	  same file. But this is just an example.
+
+	  NOTE: You need 'read' access to the event device to be able to read and grab it!
+
+Write Mode:
+	In write mode, the utility simply waits for the output of a 'read' mode process on stdin, and uses
+	this to clone the device using the 'uinput' special device file.
+	You must either have uinput compiled into your kernel, or the 'uinput' module loaded.
+
+	Example:
+	  modeprobe uinput
+	  netcat -t -l -p 1955 | ./netevent -write
