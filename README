@@ -35,6 +35,9 @@ Read Mode:
 	    ./netevent -toggler ~/maintoggler -ontoggle 'echo $GRAB > ~/toggler' \
 	        -read /dev/input/event7 | netcat -t 192.168.0.50 1955 &
 	    ./netevent -toggler ~/toggler -read /dev/input/event15 | netcat -t 192.168.0.50 1956
+	  NOTE: If you want to grab the current keyboard, add a 'sleep 0.3 &' before the command, otherwise
+	        it is possible that the release of your 'return' key when executing the command is already
+		read by the utility and you'll endup with 'return' being key-repeated :P
 
 	  Other machine (192.168.0.50 in our case)
 	    netcat -t -l -p 1955 | ./netevent -write &
@@ -60,3 +63,8 @@ Write Mode:
 	Example:
 	  modeprobe uinput
 	  netcat -t -l -p 1955 | ./netevent -write
+
+client.sh
+	wrapper script to execute netcat and read from a device
+host.sh
+	wrapper script to execute netcat and pass its output to netevent
