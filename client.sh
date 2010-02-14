@@ -4,7 +4,23 @@ DEVICE=$1
 HOST=$2
 PORT=$3
 shift 3
-REST=$@
+
+ONTOG="-ontoggle"
+ONTOGARG=""
+TOG=""
+TOGARG=""
+while [ $# -gt 1 ]; do
+	if [ "$1" = "-ontoggle" ]; then
+		ONTOG="-ontoggle"
+		ONTOGARG="$2"
+		shift 2
+	fi
+	if [ "$1" = "-toggler" ]; then
+		TOG="-toggler"
+		TOGARG="$2"
+		shift 2
+	fi
+done
 
 usage() {
 	cat <<EOF
@@ -24,4 +40,4 @@ die() {
 
 sleep 1
 
-exec ./netevent $REST -read "$DEVICE" | nc -t $HOST $PORT
+exec ./netevent $TOG $TOGARG $ONTOG "$ONTOGARG" -read "$DEVICE" | nc -t $HOST $PORT

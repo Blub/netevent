@@ -50,7 +50,9 @@ int main(int argc, char **argv)
 			argv += 2;
 			argc -= 2;
 		}
-		else
+		else {
+			cerr << "invalid parameter: " << argv[1] << endl;
 			usage(arg0);
+		}
 	}
 }
