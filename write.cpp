@@ -47,6 +47,7 @@ int spawn_device()
 	do { \
 	if (testbit(input_bits, EV_##REL)) { \
 		unsigned char bits##rel[1+REL_MAX/8]; \
+		cerr << "Reading " #rel "-bits" << endl; \
 		cin.read((char*)bits##rel, sizeof(bits##rel)); \
 		for (i = 0; i < REL_MAX; ++i) { \
 			if (!testbit(bits##rel, i)) continue; \
@@ -69,6 +70,7 @@ int spawn_device()
 	do { \
 	if (testbit(input_bits, EV_##KEY)) { \
 		unsigned char bits##key[1+KEY_MAX/8]; \
+		cerr << "Reading " #key "-data" << endl; \
 		cin.read((char*)bits##key, sizeof(bits##key)); \
 		for (i = 0; i < KEY_MAX; ++i) { \
 			if (!testbit(bits##key, i)) continue; \
@@ -104,12 +106,16 @@ int spawn_device()
 		goto error;
 	}
 
+	cerr << "Transferring input events." << endl;
 	while (true) {
 		if (!cin.read((char*)&ev, sizeof(ev))) {
 			cerr << "End of data" << endl;
 			break;
 		}
-
+		if (write(fd, &ev, sizeof(ev)) < (ssize_t)sizeof(ev)) {
+			cErr << "Write error: " << err << endl;
+			goto error;
+		}
 	}
 
 	goto end;

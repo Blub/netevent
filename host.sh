@@ -1,15 +1,18 @@
 #! /bin/sh
 
-PORT=$1
-DEVICE=$2
+HOST=$1
+PORT=$2
+DEVICE=$3
 
 usage() {
 	cat <<EOF
-usage: $0 <port> <device>
+usage: $0 <host> <port> <device>
 EOF
+	exit 1
 }
 
+[ -n "$HOST" ] || usage
 [ -n "$PORT" ] || usage
 [ -e "$DEVICE" ] || usage
 
-exec nc -c -t -l -p $PORT -e "./netevent -read $DEVICE"
+exec ./netevent -read "$DEVICE" | nc -t $HOST $PORT
