@@ -28,10 +28,6 @@ int spawn_device()
 	return 0;
 }
 
-#define gerr() std::string err(strerror(errno))
-#define cErr gerr(); cerr
-#define testbit(in, bit) (!!( ((in)[bit/8]) & (1<<(bit&7)) ))
-
 int read_device(const char *devfile)
 {
 	struct input_event ev;
