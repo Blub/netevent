@@ -2,11 +2,12 @@
 
 #include <signal.h>
 
+static bool running = true;
 static bool on = true;
 static int fd = 0;
+static bool tog_on = false;
 
-pthread_t tog_thread;
-bool tog_on = false;
+static pthread_t tog_thread;
 
 void tog_signal(int sig)
 {
@@ -40,8 +41,13 @@ void *tog_func(void *ign)
 		}
 	}
 
-	tog_on = on = false;
+	tog_on = running = false;
 	return 0;
+}
+
+void toggle()
+{
+	
 }
 
 int read_device(const char *devfile)
@@ -150,7 +156,7 @@ int read_device(const char *devfile)
         }
 
 	cerr << "Transferring input events." << endl;
-	while (on) {
+	while (running) {
 		s = read(fd, &ev, sizeof(ev));
 		if (!s) {
 			cerr << "EOF" << endl;
@@ -167,7 +173,7 @@ int read_device(const char *devfile)
 			if (ioctl(fd, EVIOCGRAB, (void*)(int)on) == -1) {
 				cErr << "Grab failed: " << err << endl;
 			}
-		} else {
+		} else if (on) {
 			cout.write((const char*)&ev, sizeof(ev));
 			cout.flush();
 		}
