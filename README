@@ -19,7 +19,8 @@ Read Mode:
 	  Currently, the KEY event 161 (the eject key on apple wireless keyboards) is hardcoded
           as a key to toggle it on/off.
 	
-	In this mode, the -toggler parameter specifies a file which is read (over and over again)
+	In this mode, the -toggler parameter specifies a file which is read (on change, or without inotify
+	support it is read over and over again so it would be goot to use a fifo)
 	which causes the program to either ungrab or (re-)grab the event device. If the file contains
 	data which corresponds to "false" (ie. a zero digit), the device is released, and no events
 	are sent to stdout. On "true" (ie. a 1 digit), the device is re-grabbed, and the events passed
