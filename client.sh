@@ -15,4 +15,6 @@ EOF
 [ -n "$PORT" ] || usage
 [ -e "$DEVICE" ] || usage
 
+sleep 1
+
 exec ./netevent -read "$DEVICE" | nc -t $HOST $PORT
