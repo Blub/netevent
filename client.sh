@@ -3,12 +3,12 @@
 DEVICE=$1
 HOST=$2
 PORT=$3
-TOGFILE=$4
-ONTOG=$5
+shift 3
+REST=$@
 
 usage() {
 	cat <<EOF
-usage: $0 <device> <host> <port>
+usage: $0 <device> <host> <port> [rest...]
 EOF
 	exit 1
 }
@@ -22,17 +22,6 @@ die() {
 [ -n "$PORT" ] || usage
 [ -e "$DEVICE" ] || usage
 
-TOGARG=""
-if [ -n "$TOGFILE" ]; then
-  TOGARG="-toggler \"$TOGFILE\""
-  mkfifo "$TOGFILE" || die "Failed to create fifo"
-fi
-
-ONTOGARG=""
-if [ -n "$ONTOG" ]; then
-  ONTOGARG="-ontoggle \"$ONTOG\""
-fi
-
 sleep 1
 
-exec ./netevent $TOGARG $ONTOGARG -read "$DEVICE" | nc -t $HOST $PORT
+exec ./netevent $REST -read "$DEVICE" | nc -t $HOST $PORT
