@@ -71,7 +71,7 @@ static void *tog_func(void *ign)
 #endif
 		tfd = open(toggle_file, O_RDONLY);
 		if (tfd < 0) {
-			cErr << "Failed to open fifo '" << toggle_file << "': " << err << endl;
+			cErr << "Failed to open '" << toggle_file << "': " << err << endl;
 			break;
 		}
 		read(tfd, dat, sizeof(dat));
