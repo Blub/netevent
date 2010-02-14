@@ -24,7 +24,12 @@ static void *tog_func(void *ign)
 	signal(SIGUSR1, tog_signal);
 	while (tog_on) {
 		tfd = open(toggle_file, O_RDONLY);
+		if (tfd < 0) {
+			cErr << "Failed to open fifo '" << toggle_file << "': " << err << endl;
+			break;
+		}
 		read(tfd, dat, sizeof(dat));
+		close(tfd);
 		dat[sizeof(dat)-1] = 0;
 		bool r = !!atoi(dat);
 		if (on != r) {

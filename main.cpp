@@ -10,8 +10,11 @@ int spawn_device();
 static void usage(const char *arg0)
 {
 	size_t len = strlen(arg0);
-	cerr << "usage: " << arg0                  << " -read <device>" << endl;
-	cerr << "       " << std::string(len, ' ') << " -write" << endl;
+	cerr << "usage: " << arg0                  << " [options] -read <device>" << endl;
+	cerr << "       " << std::string(len, ' ') << " [options] -write" << endl;
+	cerr << "options are:" << endl;
+	cerr << "  -ontoggle <command>     Command to execute when grabbing is toggled." << endl;
+	cerr << "  -toggler <fifo>         Fifo to keep opening and reading the on-status." << endl;
 	exit(1);
 }
 
