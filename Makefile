@@ -2,7 +2,7 @@ CXX = g++
 CFLAGS = -Wall
 LDFLAGS = -g
 
-SOURCES = main.cpp
+SOURCES = main.cpp reader.cpp
 
 all: build netevent
 

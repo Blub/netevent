@@ -9,8 +9,12 @@ static const char *uinput_file[] = {
 
 const size_t uinput_cnt = sizeof(uinput_file) / sizeof(uinput_file[0]);
 
+unsigned char input_bits[1+EV_MAX/8];
+
+int read_device(const char *name);
 int spawn_device()
 {
+	int e;
 	int fd;
 	size_t i;
 
@@ -24,126 +28,33 @@ int spawn_device()
 		cerr << "Failed to open uinput device file. Please specify." << endl;
 		return 1;
 	}
-	
-	return 0;
-}
-
-int read_device(const char *devfile)
-{
-	struct input_event ev;
-	size_t i;
-	int e = 0;
-	int fd = open(devfile, O_RDONLY);
-
-	if (fd < 0) {
-		std::string err(strerror(errno));
-		cerr << "Failed to open device '" << devfile << "': " << err << endl;
-		return 1;
-	}
-
-	if (ioctl(fd, EVIOCGRAB, (void*)1) == -1) {
-		std::string err(strerror(errno));
-		cerr << "Failed to grab device: " << err << endl;
-	}
 
 	struct uinput_user_dev dev;
+	struct input_event ev;
+
 	memset(&dev, 0, sizeof(dev));
-
-	if (ioctl(fd, EVIOCGNAME(sizeof(dev.name)), dev.name) == -1) {
-		cErr << "Failed to get device name: " << err << endl;
-		goto error;
-	}
-
-	if (ioctl(fd, EVIOCGID, &dev.id) == -1) {
-		cErr << "Failed to get device id: " << err << endl;
-		goto error;
-	}
+	cin.read((char*)dev.name, sizeof(dev.name));
+	cin.read((char*)&dev.id, sizeof(dev.id));
 	
-	cerr << " Device: " << dev.name << endl;
-	cerr << "     Id: " << dev.id.version << endl;
-	cerr << "BusType: " << dev.id.bustype << endl;
-	
-	cout.write(dev.name, sizeof(dev.name));
-	cout.write((const char*)&dev.id, sizeof(dev.id));
-	
-	unsigned char input_bits[1+EV_MAX/8];
-	cerr << "Getting input bits." << endl;
-	if (ioctl(fd, EVIOCGBIT(0, sizeof(input_bits)), &input_bits) == -1) {
-		cErr << "Failed to get input-event bits: " << err << endl;
-		goto error;
-	}
-	cout.write((const char*)input_bits, sizeof(input_bits));
-
-#define TransferBitsFor(REL, rel, REL_MAX) \
-	do { \
-	if (testbit(input_bits, EV_##REL)) { \
-		unsigned char bits##rel[1+REL_MAX/8]; \
-		cerr << "Getting " #rel "-bits." << endl; \
-		if (ioctl(fd, EVIOCGBIT(EV_##REL, sizeof(bits##rel)), bits##rel) == -1) { \
-			cErr << "Failed to get " #rel " bits: " << err << endl; \
-			goto error; \
-		} \
-		cout.write((const char*)&bits##rel, sizeof(bits##rel)); \
-	} \
-	} while(0)
-	
-	TransferBitsFor(KEY, key, KEY_MAX);
-	TransferBitsFor(ABS, abs, ABS_MAX);
-	TransferBitsFor(REL, rel, REL_MAX);
-	TransferBitsFor(MSC, msc, MSC_MAX);
-	TransferBitsFor(SW, sw, SW_MAX);
-	TransferBitsFor(LED, led, LED_MAX);
-
-#define TransferDataFor(KEY, key, KEY_MAX) \
-	do { \
-	if (testbit(input_bits, EV_##KEY)) { \
-		cerr << "Getting " #key "-state." << endl; \
-		unsigned char bits##key[1+KEY_MAX/8]; \
-		if (ioctl(fd, EVIOCG##KEY(sizeof(bits##key)), bits##key) == -1) { \
-			cErr << "Failed to get " #key " state: " << err << endl; \
-			goto error; \
-		} \
-		cout.write((const char*)bits##key, sizeof(bits##key)); \
-	} \
-	} while(0)
-	
-	TransferDataFor(KEY, key, KEY_MAX);
-	TransferDataFor(LED, led, LED_MAX);
-	TransferDataFor(SW, sw, SW_MAX);
-
-	if (testbit(input_bits, EV_ABS)) {
-		struct input_absinfo ai;
-		cerr << "Getting abs-info." << endl;
-		for (i = 0; i < ABS_MAX; ++i) {
-			if (ioctl(fd, EVIOCGABS(i), &ai) == -1) {
-				cErr << "Failed to get device id: " << err << endl;
-				goto error;
-			}
-			cout.write((const char*)&ai, sizeof(ai));
-		}
-	}
-
-	while (true) {
-		ssize_t s = read(fd, &ev, sizeof(ev));
-		if (!s) {
-			cerr << "EOF" << endl;
-			break;
-		}
-		else if (s < 0) {
-			cErr << "When reading from device: " << err << endl;
+	cin.read((char*)input_bits, sizeof(input_bits));
+	for (i = 0; i < EV_MAX; ++i) {
+		if (!testbit(input_bits, i))
+			continue;
+		if (ioctl(fd, UI_SET_EVBIT, i) == -1) {
+			cErr << "Failed to set evbit " << i << ": " << err << endl;
 			goto error;
 		}
-		cout.write((const char*)&ev, sizeof(ev));
 	}
+
+	close(fd);
 
 	goto end;
 error:
 	e = 1;
 end:
-	ioctl(fd, EVIOCGRAB, (void*)0);
 	close(fd);
-
-	return 0;
+	
+	return e;
 }
 
 static void usage(const char *arg0)
@@ -158,6 +69,8 @@ int main(int argc, char **argv)
 {
 	if (argc < 2)
 		usage(argv[0]);
+
+	memset(input_bits, 0, sizeof(input_bits));
 
 	std::string command(argv[1]);
 	if (command == "-read") {
