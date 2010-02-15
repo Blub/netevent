@@ -111,7 +111,7 @@ int read_device(const char *devfile)
 	size_t i;
 	ssize_t s;
 	int e = 0;
-	on = true;
+	on = !no_grab;
 	fd = open(devfile, O_RDONLY);
 
 	if (fd < 0) {
@@ -120,9 +120,11 @@ int read_device(const char *devfile)
 		return 1;
 	}
 
-	if (ioctl(fd, EVIOCGRAB, (void*)1) == -1) {
-		std::string err(strerror(errno));
-		cerr << "Failed to grab device: " << err << endl;
+	if (on) {
+		if (ioctl(fd, EVIOCGRAB, (void*)1) == -1) {
+			std::string err(strerror(errno));
+			cerr << "Failed to grab device: " << err << endl;
+		}
 	}
 
 	struct uinput_user_dev dev;

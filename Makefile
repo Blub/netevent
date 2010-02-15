@@ -3,7 +3,7 @@ CC = gcc
 CFLAGS = -Wall -pthread
 LDFLAGS = -g -pthread
 
-SOURCES = main.cpp reader.cpp write.cpp
+SOURCES = main.cpp reader.cpp write.cpp showev.cpp
 
 ifneq ($(inotify),no)
 	CFLAGS += -DWITH_INOTIFY
