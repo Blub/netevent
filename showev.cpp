@@ -79,7 +79,8 @@ int show_events(int count, const char *devname)
 	struct input_event ev;
 	ssize_t s;
 	int c;
-	cout << std::hex << std::setfill(' ');
+	if (!be_quiet)
+		cout << std::hex << std::setfill(' ');
 	for (c = 0; c < count; ++c) {
 		s = read(fd, &ev, sizeof(ev));
 		if (s < 0) {
@@ -92,20 +93,23 @@ int show_events(int count, const char *devname)
 			close(fd);
 			return 1;
 		}
-		time_t curtime = ev.time.tv_sec;
-		struct tm *tmp = localtime(&curtime);
-		if (ev.type == EV_SYN && !count_syn)
-			cout << "   -";
-		else
-			cout << std::right << std::setfill(' ') << std::setw(4) << c;
-		cout << ") Event time: " << asctime(tmp); // asctime contains a newline
-		cout << std::left;
-		cout << "      Type = " << std::setw(3) << ev.type << evname(ev.type)
-		     << "      Code = " << std::setw(6) << ev.code
-		     << "  Value = " << std::setw(6) << ev.value
-		     << endl;
-		if (!count_syn && ev.type == EV_SYN)
-			--c;
+		if (!be_quiet) {
+			time_t curtime = ev.time.tv_sec;
+			struct tm *tmp = localtime(&curtime);
+			if (ev.type == EV_SYN && !count_syn)
+				cout << "   -";
+			else
+				cout << std::right << std::setfill(' ') << std::setw(4) << c;
+			cout << ") Event time: " << asctime(tmp); // asctime contains a newline
+			cout << std::left;
+			cout << "      Type = " << std::setw(3) << ev.type << evname(ev.type)
+			     << "      Code = " << std::setw(6) << ev.code
+			     << "  Value = " << std::setw(6) << ev.value
+			     << endl;
+			if (!count_syn && ev.type == EV_SYN)
+				--c;
+		}
+		hotkey_hook(ev.type, ev.code, ev.value);
 	}
 	
 	return 0;

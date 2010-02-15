@@ -15,19 +15,23 @@ static int inf_fd;
 static int watch_fd;
 #endif
 
-static void tog_signal(int sig)
+static void toggle_hook();
+void tog_signal(int sig)
 {
-	if (sig == SIGUSR1)
+	if (sig == SIGUSR2)
 		tog_on = false;
+	else if (sig == SIGUSR1) {
+		on = !on;
+		toggle_hook();
+	}
 }
 
-static void toggle_hook();
 static void *tog_func(void *ign)
 {
 	int tfd;
 	char dat[8];
 	tog_on = true;
-	signal(SIGUSR1, tog_signal);
+	signal(SIGUSR2, tog_signal);
 
 #if !defined( WITH_INOTIFY )
 	struct stat st;
@@ -94,6 +98,7 @@ static void toggle_hook()
 		cErr << "Grab failed: " << err << endl;
 	}
        	if (toggle_cmd) {
+		/*
        		std::string tcmd("export GRAB=");
        		tcmd.append( on ? "1; " : "0; " );
        		tcmd.append(toggle_cmd);
@@ -102,6 +107,14 @@ static void toggle_hook()
        			cErr << "Failed to run command: " << err << endl;
        			exit(1);
        		}
+		*/
+		setenv("GRAB", (on ? "1" : "0"), 1);
+		if (!fork()) {
+			execlp("sh", "sh", "-c", toggle_cmd, NULL);
+       			cErr << "Failed to run command: " << err << endl;
+       			exit(1);
+		}
+
        	}
 }
 
@@ -112,6 +125,8 @@ int read_device(const char *devfile)
 	ssize_t s;
 	int e = 0;
 	on = !no_grab;
+
+	signal(SIGUSR1, tog_signal);
 	fd = open(devfile, O_RDONLY);
 
 	if (fd < 0) {
@@ -125,7 +140,10 @@ int read_device(const char *devfile)
 			std::string err(strerror(errno));
 			cerr << "Failed to grab device: " << err << endl;
 		}
+		setenv("GRAB", "1", 1);
 	}
+	else
+		setenv("GRAB", "0", 1);
 
 	struct uinput_user_dev dev;
 	memset(&dev, 0, sizeof(dev));
@@ -224,12 +242,18 @@ int read_device(const char *devfile)
 			goto error;
 		}
 
+		/*
 		if (ev.type == EV_KEY && ev.code == 161) {
 			if (ev.value == 0) {
 				on = !on;
 				toggle_hook();
 			}
 		} else if (on) {
+			cout.write((const char*)&ev, sizeof(ev));
+			cout.flush();
+		}
+		*/
+		if (!hotkey_hook(ev.type, ev.code, ev.value)) {
 			cout.write((const char*)&ev, sizeof(ev));
 			cout.flush();
 		}

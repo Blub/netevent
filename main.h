@@ -25,14 +25,22 @@ extern const char *toggle_file;
 extern const char *toggle_cmd;
 extern bool no_grab;
 extern bool count_syn;
+extern bool be_quiet;
 
 typedef struct {
 	int type;
 	int code;
 	int value;
+	std::string command;
 } hotkey_t;
 
 const char *evname(unsigned int e);
 int evid(const char *name);
+
+#include <vector>
+extern std::vector<hotkey_t> hotkeys;
+typedef std::vector<hotkey_t>::const_iterator hotkey_iterator;
+extern bool add_hotkey(const char *keydef, const char *command);
+extern bool hotkey_hook(int type, int code, int value);
 
 #endif
