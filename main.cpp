@@ -21,6 +21,13 @@ static void usage(const char *arg0)
 	cerr << "  -toggler <fifo>         Fifo to keep opening and reading the on-status." << endl;
 	cerr << "  -nograb                 Do not grab the device at startup." << endl;
 	cerr << "  -countsyn               Also count SYN events in showevents." << endl;
+	cerr << "  -hotkey t:c:v <command> Run a command on the Type:Code:Value event." << endl;
+	cerr << std::endl;
+	cerr << "-write does not accept any parameters" << endl;
+	cerr << "a count of 0 in -showevents means keep going forever" << endl;
+	cerr << std::endl;
+	cerr << "example hotkey: -hotkey EV_KEY:161:0 "" -hotkey EV_KEY:161:1 \"play sound.wav\"" << endl;
+	cerr << "  will ignore the eject key-down event, but play sound.wav when releasing the key." << endl;
 	exit(1);
 }
 

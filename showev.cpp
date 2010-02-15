@@ -31,6 +31,26 @@ const char *evname(unsigned int e)
 	}
 	return "<0xDeadC0de>";
 }
+#undef ETOS
+
+int evid(const char *name)
+{
+#define ETOS(x) if (!strcmp(name, #x)) return x
+       	ETOS(EV_SYN);
+       	ETOS(EV_KEY);
+       	ETOS(EV_REL);
+       	ETOS(EV_ABS);
+       	ETOS(EV_MSC);
+       	ETOS(EV_SW);
+       	ETOS(EV_LED);
+       	ETOS(EV_SND);
+       	ETOS(EV_REP);
+       	ETOS(EV_FF);
+       	ETOS(EV_PWR);
+       	ETOS(EV_FF_STATUS);
+	return EV_MAX;
+}
+#undef ETOS
 
 int show_events(int count, const char *devname)
 {

@@ -26,4 +26,13 @@ extern const char *toggle_cmd;
 extern bool no_grab;
 extern bool count_syn;
 
+typedef struct {
+	int type;
+	int code;
+	int value;
+} hotkey_t;
+
+const char *evname(unsigned int e);
+int evid(const char *name);
+
 #endif
