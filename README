@@ -53,9 +53,6 @@ What does it do?
 Read Mode:
 	In read mode, it opens an event file, grabs it, and dumps its capabilities, and then
 	all its events as binary data to stdout.
-	NOTE:
-	  Currently, the KEY event 161 (the eject key on apple wireless keyboards) is hardcoded
-          as a key to toggle it on/off.
 	
 	In this mode, the -toggler parameter specifies a file which is read (on change, or without inotify
 	support it is read over and over again so it would be goot to use a fifo)
