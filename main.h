@@ -24,5 +24,6 @@ extern unsigned char input_bits[1+EV_MAX/8];
 extern const char *toggle_file;
 extern const char *toggle_cmd;
 extern bool no_grab;
+extern bool count_syn;
 
 #endif

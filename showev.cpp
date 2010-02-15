@@ -79,7 +79,7 @@ int show_events(int count, const char *devname)
 		     << "      Code = " << std::setw(6) << ev.code
 		     << "  Value = " << std::setw(6) << ev.value
 		     << endl;
-		if (ev.type == EV_SYN)
+		if (!count_syn && ev.type == EV_SYN)
 			--c;
 	}
 	

@@ -4,6 +4,7 @@ unsigned char input_bits[1+EV_MAX/8];
 const char *toggle_file = 0;
 const char *toggle_cmd = 0;
 bool no_grab = false;
+bool count_syn = false;
 
 int read_device(const char *devname);
 int spawn_device();
@@ -19,6 +20,7 @@ static void usage(const char *arg0)
 	cerr << "  -ontoggle <command>     Command to execute when grabbing is toggled." << endl;
 	cerr << "  -toggler <fifo>         Fifo to keep opening and reading the on-status." << endl;
 	cerr << "  -nograb                 Do not grab the device at startup." << endl;
+	cerr << "  -countsyn               Also count SYN events in showevents." << endl;
 	exit(1);
 }
 
@@ -68,6 +70,11 @@ int main(int argc, char **argv)
 			if (argc < 4)
 				usage(arg0);
 			return show_events(atoi(argv[2]), argv[3]);
+		}
+		else if (command == "-countsyn") {
+			count_syn = true;
+			++argv;
+			--argc;
 		}
 		else {
 			cerr << "invalid parameter: " << argv[1] << endl;
