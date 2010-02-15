@@ -1,0 +1,7 @@
+0.1
+  -) Added -showevents and -nograb switches.
+
+pre 0.1:
+  -) Added inotify support.
+  -) Added 'devname' utility.
+  -) Added read and write mode.

@@ -14,12 +14,17 @@ Installation:
 
 Usage:
 	This tool operates in 2 modes:
-	./netevent [-toggler <toggle file>] [-ontoggle <shell command>] -read <device file>
+	./netevent [-nograb] [-toggler <toggle file>] [-ontoggle <shell command>] -read <device file>
 	./netevent -write <device file>
+	./netevent [-nograb] [-countsyn] -showevents <count> <device file>
 
 	Without inotify support, the toggle-file has to exist and be a FIFO, because otherwise it would
 	constantly reopen and read form the file.
 	With inotify support the file doesn't need to exist yet. It will be read upon creation or modification.
+
+	The -showevents switch allows you to simply print event information to stdout. This is useful because
+	there's going to be the possibility to configure hotkeys using the information you get out of it.
+	By default SYN events are not counted, unless you add the -countsyn switch.
 
 What does it do?
 	This utility lets you clone a linux event device. In read mode it reads from the device
