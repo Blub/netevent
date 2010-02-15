@@ -147,10 +147,13 @@ bool add_hotkey(const char *keydef, const char *command)
 		return false;
 	}
 
-	hk.code = atoi(spart[0].c_str());
-	hk.value = atoi(spart[0].c_str());
+	hk.code = atoi(spart[1].c_str());
+	hk.value = atoi(spart[2].c_str());
 	hk.command = command;
 
+	if (!be_quiet) {
+		cerr << "Adding hotkey: " << hk.type << ':' << hk.code << ':' << hk.value << " = " << hk.command << endl;
+	}
 	hotkeys.push_back(hk);
 	return true;
 }

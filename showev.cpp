@@ -80,7 +80,7 @@ int show_events(int count, const char *devname)
 	ssize_t s;
 	int c;
 	if (!be_quiet)
-		cout << std::hex << std::setfill(' ');
+		cout << std::dec << std::setfill(' ');
 	for (c = 0; !count || c < count; ++c) {
 		s = read(fd, &ev, sizeof(ev));
 		if (s < 0) {
