@@ -1,3 +1,9 @@
+0.2:
+  -) Hardcoded eject hotkey removed
+  -) -quiet option
+  -) -hotkey option
+  -) hotkey handling for all 3 modes
+
 0.1
   -) Added -showevents and -nograb switches.
 
