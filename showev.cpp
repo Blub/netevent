@@ -2,6 +2,7 @@
 #include <time.h>
 #include <iomanip>
 #include <sstream>
+#include <signal.h>
 
 const char *evname(unsigned int e)
 {
@@ -52,15 +53,39 @@ int evid(const char *name)
 }
 #undef ETOS
 
+static bool on = true;
+static int fd;
+
+static void toggle_hook()
+{
+	if (ioctl(fd, EVIOCGRAB, (void*)(int)on) == -1) {
+		cErr << "Grab failed: " << err << endl;
+	}
+	if (toggle_cmd) {
+		setenv("GRAB", (on ? "1" : "0"), 1);
+		if (!fork()) {
+			execlp("sh", "sh", "-c", toggle_cmd, NULL);
+			cErr << "Failed to run command: " << err << endl;
+			exit(1);
+		}
+	}
+}
+
+void ev_toggle(int sig)
+{
+	if (sig == SIGUSR1) {
+		on = !on;
+		toggle_hook();
+	}
+}
+
 int show_events(int count, const char *devname)
 {
-	int fd;
-
 	if (count < 0) {
 		cerr << "Bogus number specified: cannot print " << count << " events." << endl;
 		return 1;
 	}
-	
+
 	fd = open(devname, O_RDONLY);
 	
 	if (fd < 0) {
@@ -68,7 +93,10 @@ int show_events(int count, const char *devname)
 		return 1;
 	}
 
-	if (!no_grab) {
+	signal(SIGUSR1, ev_toggle);
+
+	on = !no_grab;
+	if (on) {
 		if (ioctl(fd, EVIOCGRAB, (void*)1) == -1) {
 			cErr << "Failed to grab device: " << err << endl;
 			close(fd);

@@ -98,16 +98,6 @@ static void toggle_hook()
 		cErr << "Grab failed: " << err << endl;
 	}
        	if (toggle_cmd) {
-		/*
-       		std::string tcmd("export GRAB=");
-       		tcmd.append( on ? "1; " : "0; " );
-       		tcmd.append(toggle_cmd);
-       		if (!fork()) {
-       			execlp("sh", "sh", "-c", tcmd.c_str(), NULL);
-       			cErr << "Failed to run command: " << err << endl;
-       			exit(1);
-       		}
-		*/
 		setenv("GRAB", (on ? "1" : "0"), 1);
 		if (!fork()) {
 			execlp("sh", "sh", "-c", toggle_cmd, NULL);
