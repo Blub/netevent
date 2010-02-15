@@ -62,7 +62,6 @@ static void toggle_hook()
 		cErr << "Grab failed: " << err << endl;
 	}
 	if (toggle_cmd) {
-		setenv("GRAB", (on ? "1" : "0"), 1);
 		if (!fork()) {
 			execlp("sh", "sh", "-c", toggle_cmd, NULL);
 			cErr << "Failed to run command: " << err << endl;
@@ -102,7 +101,10 @@ int show_events(int count, const char *devname)
 			close(fd);
 			return 1;
 		}
+		setenv("GRAB", "1", -1);
 	}
+	else
+		setenv("GRAB", "0", -1);
 
 	struct input_event ev;
 	ssize_t s;
@@ -137,7 +139,10 @@ int show_events(int count, const char *devname)
 			if (!count_syn && ev.type == EV_SYN)
 				--c;
 		}
-		hotkey_hook(ev.type, ev.code, ev.value);
+		bool old_on = on;
+		if (hotkey_hook(ev.type, ev.code, ev.value) && old_on != on) {
+			setenv("GRAB", (on ? "1" : "0"), 1);
+		}
 	}
 	
 	return 0;

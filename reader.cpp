@@ -98,7 +98,6 @@ static void toggle_hook()
 		cErr << "Grab failed: " << err << endl;
 	}
        	if (toggle_cmd) {
-		setenv("GRAB", (on ? "1" : "0"), 1);
 		if (!fork()) {
 			execlp("sh", "sh", "-c", toggle_cmd, NULL);
        			cErr << "Failed to run command: " << err << endl;
@@ -130,10 +129,10 @@ int read_device(const char *devfile)
 			std::string err(strerror(errno));
 			cerr << "Failed to grab device: " << err << endl;
 		}
-		setenv("GRAB", "1", 1);
+		setenv("GRAB", "1", -1);
 	}
 	else
-		setenv("GRAB", "0", 1);
+		setenv("GRAB", "0", -1);
 
 	struct uinput_user_dev dev;
 	memset(&dev, 0, sizeof(dev));
@@ -243,9 +242,12 @@ int read_device(const char *devfile)
 			cout.flush();
 		}
 		*/
+		bool old_on = on;
 		if (!hotkey_hook(ev.type, ev.code, ev.value)) {
 			cout.write((const char*)&ev, sizeof(ev));
 			cout.flush();
+		} else if (old_on != on) {
+			setenv("GRAB", (on ? "1" : "0"), -1);
 		}
 	}
 
