@@ -41,6 +41,13 @@ Usage:
 	    for EV_KEY events, code corresponds to the key and value to the 'pressed' state.
 	    You can find out what kind of event you're looking for by letting -showevents print
 	    the event for you.
+	    There are a few special hotkey commands available:
+	      @toggle
+	        Toggle device grabbing
+	      @toggle-on
+	        Activate device grabbing
+	      @toggle-off
+	        Deactivate device grabbing
 
 What does it do?
 	This utility lets you clone a linux event device. In read mode it reads from the device
@@ -53,7 +60,7 @@ What does it do?
 Read Mode:
 	In read mode, it opens an event file, grabs it, and dumps its capabilities, and then
 	all its events as binary data to stdout.
-	
+
 	In this mode, the -toggler parameter specifies a file which is read (on change, or without inotify
 	support it is read over and over again so it would be goot to use a fifo)
 	which causes the program to either ungrab or (re-)grab the event device. If the file contains

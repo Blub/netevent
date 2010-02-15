@@ -30,6 +30,8 @@ static void usage(const char *arg0)
 	cerr << std::endl;
 	cerr << "example hotkey: -hotkey EV_KEY:161:0 "" -hotkey EV_KEY:161:1 \"play sound.wav\"" << endl;
 	cerr << "  will ignore the eject key-down event, but play sound.wav when releasing the key." << endl;
+	cerr << "The special hotkey command '@toggle' toggles device grabbing." << endl;
+	cerr << "You can use '@toggle-on' and '@toggle-off' to specifically enable or disable grabbing." << endl;
 	exit(1);
 }
 
@@ -38,7 +40,7 @@ int main(int argc, char **argv)
 	const char *arg0 = argv[0];
 	if (argc < 2)
 		usage(arg0);
-	
+
 	memset(input_bits, 0, sizeof(input_bits));
 
 	while (1) {
@@ -169,6 +171,14 @@ bool hotkey_hook(int type, int code, int value)
 				return true;
 			if (hi->command == "@toggle") {
 				on = !on;
+				return true;
+			}
+			if (hi->command == "@toggle-on") {
+				on = true;
+				return true;
+			}
+			if (hi->command == "@toggle-off") {
+				on = false;
 				return true;
 			}
        			if (!fork()) {
