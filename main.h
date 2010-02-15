@@ -42,5 +42,6 @@ extern std::vector<hotkey_t> hotkeys;
 typedef std::vector<hotkey_t>::const_iterator hotkey_iterator;
 extern bool add_hotkey(const char *keydef, const char *command);
 extern bool hotkey_hook(int type, int code, int value);
+extern bool on;
 
 #endif

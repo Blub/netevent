@@ -53,7 +53,6 @@ int evid(const char *name)
 }
 #undef ETOS
 
-static bool on = true;
 static int fd;
 
 static void toggle_hook()

@@ -168,7 +168,7 @@ bool hotkey_hook(int type, int code, int value)
 			if (!hi->command.length())
 				return true;
 			if (hi->command == "@toggle") {
-				kill(getpid(), SIGUSR1);
+				on = !on;
 				return true;
 			}
        			if (!fork()) {

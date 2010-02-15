@@ -3,7 +3,7 @@
 #include <signal.h>
 
 static bool running = true;
-static bool on = true;
+bool on = true;
 static int fd = 0;
 static bool tog_on = false;
 
@@ -97,6 +97,7 @@ static void toggle_hook()
 	if (ioctl(fd, EVIOCGRAB, (void*)(int)on) == -1) {
 		cErr << "Grab failed: " << err << endl;
 	}
+	setenv("GRAB", (on ? "1" : "0"), -1);
        	if (toggle_cmd) {
 		if (!fork()) {
 			execlp("sh", "sh", "-c", toggle_cmd, NULL);
@@ -247,7 +248,7 @@ int read_device(const char *devfile)
 			cout.write((const char*)&ev, sizeof(ev));
 			cout.flush();
 		} else if (old_on != on) {
-			setenv("GRAB", (on ? "1" : "0"), -1);
+			toggle_hook();
 		}
 	}
 
