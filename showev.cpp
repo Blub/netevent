@@ -56,7 +56,7 @@ int show_events(int count, const char *devname)
 {
 	int fd;
 
-	if (count < 1) {
+	if (count < 0) {
 		cerr << "Bogus number specified: cannot print " << count << " events." << endl;
 		return 1;
 	}
@@ -81,7 +81,7 @@ int show_events(int count, const char *devname)
 	int c;
 	if (!be_quiet)
 		cout << std::hex << std::setfill(' ');
-	for (c = 0; c < count; ++c) {
+	for (c = 0; !count || c < count; ++c) {
 		s = read(fd, &ev, sizeof(ev));
 		if (s < 0) {
 			cErr << "Error while reading from device: " << err << endl;
