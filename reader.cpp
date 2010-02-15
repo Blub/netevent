@@ -244,11 +244,13 @@ int read_device(const char *devfile)
 		}
 		*/
 		bool old_on = on;
-		if (!hotkey_hook(ev.type, ev.code, ev.value) && on) {
+		if (hotkey_hook(ev.type, ev.code, ev.value)) {
+			if (old_on != on)
+				toggle_hook();
+		}
+		else if (on) {
 			cout.write((const char*)&ev, sizeof(ev));
 			cout.flush();
-		} else if (old_on != on) {
-			toggle_hook();
 		}
 	}
 

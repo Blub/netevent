@@ -60,6 +60,7 @@ static void toggle_hook()
 	if (ioctl(fd, EVIOCGRAB, (void*)(int)on) == -1) {
 		cErr << "Grab failed: " << err << endl;
 	}
+	setenv("GRAB", (on ? "1" : "0"), 1);
 	if (toggle_cmd) {
 		if (!fork()) {
 			execlp("sh", "sh", "-c", toggle_cmd, NULL);
@@ -139,8 +140,9 @@ int show_events(int count, const char *devname)
 				--c;
 		}
 		bool old_on = on;
-		if (hotkey_hook(ev.type, ev.code, ev.value) && old_on != on) {
-			setenv("GRAB", (on ? "1" : "0"), 1);
+		if (hotkey_hook(ev.type, ev.code, ev.value)) {
+			if (old_on != on)
+				toggle_hook();
 		}
 	}
 	
