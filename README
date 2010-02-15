@@ -26,6 +26,22 @@ Usage:
 	there's going to be the possibility to configure hotkeys using the information you get out of it.
 	By default SYN events are not counted, unless you add the -countsyn switch.
 
+	Additional options include:
+	  -quiet
+	    Do not print that much spam
+	    In -showevents mode: do not print events. Use it if you want it to only act as a
+	    hotkey-tool without spam.
+	  -hotkey TYPE:CODE:VALUE <command>
+	    Create a hotkey: Execute the specified command if the event with the given
+	    type, code and value is read from or written to the device.
+	    When a hotkey is hit, the event will not appear in the output (-read) or the event
+	    device (-write).
+	    The command can access the GRAB variable (which is useless in -write mode).
+	    TYPE can be a numerical type, or an EV_* type found in the input headers.
+	    for EV_KEY events, code corresponds to the key and value to the 'pressed' state.
+	    You can find out what kind of event you're looking for by letting -showevents print
+	    the event for you.
+
 What does it do?
 	This utility lets you clone a linux event device. In read mode it reads from the device
 	and dumps the data to stdout, and in write mode it creates the same device

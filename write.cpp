@@ -1,4 +1,5 @@
 #include "main.h"
+#include <sys/wait.h>
 
 static const char *uinput_file[] = {
 	"/dev/uinput",
@@ -108,10 +109,14 @@ int spawn_device()
 
 	cerr << "Transferring input events." << endl;
 	while (true) {
+		int dummy;
+		waitpid(0, &dummy, WNOHANG);
 		if (!cin.read((char*)&ev, sizeof(ev))) {
 			cerr << "End of data" << endl;
 			break;
 		}
+		if (hotkey_hook(ev.type, ev.code, ev.value))
+			continue;
 		if (write(fd, &ev, sizeof(ev)) < (ssize_t)sizeof(ev)) {
 			cErr << "Write error: " << err << endl;
 			goto error;
