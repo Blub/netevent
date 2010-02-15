@@ -1,3 +1,7 @@
+0.2.1:
+  -) @toggle-on, @toggle-off
+  -) the above and @toggle added to the usage message
+
 0.2:
   -) Hardcoded eject hotkey removed
   -) -quiet option
