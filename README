@@ -14,7 +14,7 @@ Usage:
 
 What does it do?
 	This utility lets you clone a linux event device. In read mode it reads from the device
-	and dumps the data to stdout, and in write mode it write mode it creates the same device
+	and dumps the data to stdout, and in write mode it creates the same device
 	using the uinput feature, and pipes the data into the new device.
 	Since this utility operates only on device files, it does not depend on X11.
 	It even allows you to use the devices in the console.
