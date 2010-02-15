@@ -12,6 +12,14 @@ Usage:
 	./netevent [-toggler <toggle file>] [-ontoggle <shell command>] -read <device file>
 	./netevent -write <device file>
 
+What does it do?
+	This utility lets you clone a linux event device. In read mode it reads from the device
+	and dumps the data to stdout, and in write mode it write mode it creates the same device
+	using the uinput feature, and pipes the data into the new device.
+	Since this utility operates only on device files, it does not depend on X11.
+	It even allows you to use the devices in the console.
+	The same mechanism could be used to create an utility for device-specific non-X-dependent hotkeys.
+
 Read Mode:
 	In read mode, it opens an event file, grabs it, and dumps its capabilities, and then
 	all its events as binary data to stdout.
