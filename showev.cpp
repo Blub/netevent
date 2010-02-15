@@ -3,6 +3,7 @@
 #include <iomanip>
 #include <sstream>
 #include <signal.h>
+#include <sys/wait.h>
 
 const char *evname(unsigned int e)
 {
@@ -112,6 +113,8 @@ int show_events(int count, const char *devname)
 	if (!be_quiet)
 		cout << std::dec << std::setfill(' ');
 	for (c = 0; !count || c < count; ++c) {
+		int dummy;
+		waitpid(0, &dummy, WNOHANG);
 		s = read(fd, &ev, sizeof(ev));
 		if (s < 0) {
 			cErr << "Error while reading from device: " << err << endl;

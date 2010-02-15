@@ -1,6 +1,7 @@
 #include "main.h"
 
 #include <signal.h>
+#include <sys/wait.h>
 
 static bool running = true;
 bool on = true;
@@ -222,6 +223,8 @@ int read_device(const char *devfile)
 
 	cerr << "Transferring input events." << endl;
 	while (running) {
+		int dummy;
+		waitpid(0, &dummy, WNOHANG);
 		s = read(fd, &ev, sizeof(ev));
 		if (!s) {
 			cerr << "EOF" << endl;
