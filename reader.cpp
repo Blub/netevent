@@ -29,6 +29,7 @@ static void *tog_func(void *ign)
 	tog_on = true;
 	signal(SIGUSR1, tog_signal);
 
+#if !defined( WITH_INOTIFY )
 	struct stat st;
 	if (lstat(toggle_file, &st) != 0) {
 		cErr << "stat failed on " << toggle_file << ": " << err << endl;
@@ -36,26 +37,25 @@ static void *tog_func(void *ign)
 	}
 	else
 	{
-	#if !defined( WITH_INOTIFY )
 		if (!S_ISFIFO(st.st_mode)) {
 			cerr << "The toggle file is not a fifo, and inotify support has not been compiled in." << endl;
 			cerr << "This is evil, please compile with inotify support." << endl;
 			tog_on = false;
 		}
-	#else
-		inf_fd = inotify_init();
-		if (inf_fd == -1) {
-			cErr << "inotify_init failed: " << err << endl;
-			tog_on = false;
-		} else {
-			watch_fd = inotify_add_watch(inf_fd, toggle_file, IN_CLOSE_WRITE | IN_CREATE);
-			if (watch_fd == -1) {
-				cErr << "inotify_add_watch failed: " << err << endl;
-				tog_on = false;
-			}
-		}
-	#endif
 	}
+#else
+	inf_fd = inotify_init();
+	if (inf_fd == -1) {
+		cErr << "inotify_init failed: " << err << endl;
+		tog_on = false;
+	} else {
+		watch_fd = inotify_add_watch(inf_fd, toggle_file, IN_CLOSE_WRITE | IN_CREATE);
+		if (watch_fd == -1) {
+			cErr << "inotify_add_watch failed: " << err << endl;
+			tog_on = false;
+		}
+	}
+#endif
 
 	while (tog_on) {
 #if defined( WITH_INOTIFY )

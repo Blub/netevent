@@ -5,7 +5,7 @@ LDFLAGS = -g -pthread
 
 SOURCES = main.cpp reader.cpp write.cpp
 
-ifneq ($(INOTIFY),"no")
+ifneq ($(inotify),no)
 	CFLAGS += -DWITH_INOTIFY
 endif
 
