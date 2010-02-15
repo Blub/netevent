@@ -2,7 +2,12 @@ License:
 	See the LICENSE file.
 
 Compilation:
-	Simply run make, or compile the .cpp files (with pthread support) into a binary.
+	Simply run
+	  make
+	or compile the .cpp files into a binary using the CFLAGS -pthread -DWITH_INOTIFY
+	If you do not want inotify-support, run:
+	  make inotify=no
+	or leave out -DWITH_INOTIFY
 
 Installation:
 	Put the netevent binary wherever you want it...
@@ -11,6 +16,10 @@ Usage:
 	This tool operates in 2 modes:
 	./netevent [-toggler <toggle file>] [-ontoggle <shell command>] -read <device file>
 	./netevent -write <device file>
+
+	Without inotify support, the toggle-file has to exist and be a FIFO, because otherwise it would
+	constantly reopen and read form the file.
+	With inotify support the file doesn't need to exist yet. It will be read upon creation or modification.
 
 What does it do?
 	This utility lets you clone a linux event device. In read mode it reads from the device
