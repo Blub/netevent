@@ -1,5 +1,7 @@
 #include "main.h"
 #include <sys/wait.h>
+#include <sys/types.h>
+#include <stdint.h>
 
 static const char *uinput_file[] = {
 	"/dev/uinput",
@@ -7,6 +9,8 @@ static const char *uinput_file[] = {
 	"/dev/misc/uinput",
 };
 static const size_t uinput_cnt = sizeof(uinput_file) / sizeof(uinput_file[0]);
+
+static uint16_t strsz[3];
 
 int spawn_device()
 {
@@ -28,6 +32,19 @@ int spawn_device()
 
 	struct uinput_user_dev dev;
 	struct input_event ev;
+	char *evreadpos = (char*)&ev;
+
+	cin.read((char*)strsz, sizeof(strsz));
+	if (strsz[2] != sizeof(uinput_user_dev)) {
+		cerr << "Device information field sizes do not match. Sorry." << endl;
+		return 1;
+	}
+
+	if ((sizeof(ev) - sizeof(ev.time)) != (strsz[1] - strsz[0]))
+	{
+		cerr << "input-event sizes are incompatible, sorry." << endl;
+		return 1;
+	}
 
 	memset(&dev, 0, sizeof(dev));
 	cin.read((char*)dev.name, sizeof(dev.name));
@@ -107,13 +124,17 @@ int spawn_device()
 	}
 
 	cerr << "Transferring input events." << endl;
+	evreadpos += sizeof(ev);
+	evreadpos -= strsz[1];
 	while (true) {
 		int dummy;
 		waitpid(0, &dummy, WNOHANG);
-		if (!cin.read((char*)&ev, sizeof(ev))) {
+		if (!cin.read(evreadpos, sizeof(ev))) {
 			cerr << "End of data" << endl;
 			break;
 		}
+		if (evreadpos != (char*)&ev)
+			gettimeofday(&ev.time, 0);
 		if (hotkey_hook(ev.type, ev.code, ev.value))
 			continue;
 		if (write(fd, &ev, sizeof(ev)) < (ssize_t)sizeof(ev)) {

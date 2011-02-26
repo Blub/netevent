@@ -2,6 +2,8 @@
 
 #include <signal.h>
 #include <sys/wait.h>
+#include <sys/types.h>
+#include <stdint.h>
 
 static bool running = true;
 bool on = true;
@@ -152,7 +154,14 @@ int read_device(const char *devfile)
 	cerr << " Device: " << dev.name << endl;
 	cerr << "     Id: " << dev.id.version << endl;
 	cerr << "BusType: " << dev.id.bustype << endl;
-	
+
+	// First thing to write is the size of the structures as a 16 bit uint!
+	uint16_t strsz[3];
+	strsz[0] = sizeof(ev.time);
+	strsz[1] = sizeof(ev);
+	strsz[2] = sizeof(dev);
+	cout.write((const char*)strsz, sizeof(strsz));
+
 	cout.write(dev.name, sizeof(dev.name));
 	cout.write((const char*)&dev.id, sizeof(dev.id));
 	
