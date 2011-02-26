@@ -5,7 +5,6 @@ static const char *uinput_file[] = {
 	"/dev/uinput",
 	"/dev/input/uinput",
 	"/dev/misc/uinput",
-	0
 };
 static const size_t uinput_cnt = sizeof(uinput_file) / sizeof(uinput_file[0]);
 
