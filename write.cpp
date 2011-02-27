@@ -40,6 +40,12 @@ int spawn_device()
 		return 1;
 	}
 
+	if (strsz[1] != sizeof(ev)) {
+		cerr << "Beware, devices may be incompatible\n" <<
+			"Host input_event: size: " << strsz[1] <<
+			", timeval size: " << sizeof(ev) << std::endl;
+	}
+
 	if ((sizeof(ev) - sizeof(ev.time)) != (strsz[1] - strsz[0]))
 	{
 		cerr << "input-event sizes are incompatible, sorry." << endl;
@@ -124,8 +130,12 @@ int spawn_device()
 	}
 
 	cerr << "Transferring input events." << endl;
-	evreadpos += sizeof(ev);
-	evreadpos -= strsz[1];
+	char field[512];
+	memset(field, -1, sizeof(field));
+	if (sizeof(ev) == strsz[1])
+		evreadpos = (char*)&ev;
+	else
+		evreadpos = (char*)field;
 	while (true) {
 		int dummy;
 		waitpid(0, &dummy, WNOHANG);
@@ -134,7 +144,10 @@ int spawn_device()
 			break;
 		}
 		if (evreadpos != (char*)&ev)
+		{
+			memcpy(((char*)&ev) + sizeof(ev.time), evreadpos + strsz[0], sizeof(ev) - sizeof(ev.time));
 			gettimeofday(&ev.time, 0);
+		}
 		if (hotkey_hook(ev.type, ev.code, ev.value))
 			continue;
 		if (write(fd, &ev, sizeof(ev)) < (ssize_t)sizeof(ev)) {
