@@ -58,8 +58,7 @@ static int fd;
 
 static void toggle_hook()
 {
-	int _on = (int)on;
-	if (ioctl(fd, EVIOCGRAB, (void*)&_on) == -1) {
+	if (ioctl(fd, EVIOCGRAB, (void*)(int)on) == -1) {
 		cErr << "Grab failed: " << err << endl;
 	}
 	setenv("GRAB", (on ? "1" : "0"), 1);

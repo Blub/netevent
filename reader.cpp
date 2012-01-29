@@ -97,8 +97,7 @@ static void *tog_func(void *ign)
 
 static void toggle_hook()
 {
-	int _on = (int)on;
-	if (ioctl(fd, EVIOCGRAB, (void*)&_on) == -1) {
+	if (ioctl(fd, EVIOCGRAB, (void*)(int)on) == -1) {
 		cErr << "Grab failed: " << err << endl;
 	}
 	setenv("GRAB", (on ? "1" : "0"), -1);
@@ -117,7 +116,7 @@ int read_device(const char *devfile)
 	struct input_event ev;
 	size_t i;
 	ssize_t s;
-	// int e = 0;
+	int e = 0;
 	on = !no_grab;
 
 	signal(SIGUSR1, tog_signal);
@@ -269,7 +268,7 @@ int read_device(const char *devfile)
 
 	goto end;
 error:
-	//e = 1;
+	e = 1;
 end:
 	if (tog_on)
 		pthread_cancel(tog_thread);
