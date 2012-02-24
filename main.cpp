@@ -28,7 +28,7 @@ static void usage(const char *arg0)
 	cerr << "-write does not accept any parameters" << endl;
 	cerr << "a count of 0 in -showevents means keep going forever" << endl;
 	cerr << std::endl;
-	cerr << "example hotkey: -hotkey EV_KEY:161:0 "" -hotkey EV_KEY:161:1 \"play sound.wav\"" << endl;
+	cerr << "example hotkey: -hotkey EV_KEY:161:0 \"\" -hotkey EV_KEY:161:1 \"play sound.wav\"" << endl;
 	cerr << "  will ignore the eject key-down event, but play sound.wav when releasing the key." << endl;
 	cerr << "The special hotkey command '@toggle' toggles device grabbing." << endl;
 	cerr << "You can use '@toggle-on' and '@toggle-off' to specifically enable or disable grabbing." << endl;
