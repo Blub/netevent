@@ -4,6 +4,7 @@
 #include <sys/wait.h>
 #include <sys/types.h>
 #include <stdint.h>
+#include <unistd.h>
 
 static bool running = true;
 bool on = true;
@@ -150,7 +151,7 @@ int read_device(const char *devfile)
 		cErr << "Failed to get device id: " << err << endl;
 		goto error;
 	}
-	
+
 	cerr << " Device: " << dev.name << endl;
 	cerr << "     Id: " << dev.id.version << endl;
 	cerr << "BusType: " << dev.id.bustype << endl;
@@ -160,17 +161,29 @@ int read_device(const char *devfile)
 	strsz[0] = sizeof(ev.time);
 	strsz[1] = sizeof(ev);
 	strsz[2] = sizeof(dev);
-	cout.write((const char*)strsz, sizeof(strsz));
+	if (!cout.write((const char*)strsz, sizeof(strsz)))
+		exit(1);
+	if (cout.eof())
+		exit(0);
 
-	cout.write(dev.name, sizeof(dev.name));
-	cout.write((const char*)&dev.id, sizeof(dev.id));
-	
+	if (!cout.write(dev.name, sizeof(dev.name)))
+		exit(1);
+	if (cout.eof())
+		exit(0);
+	if (!cout.write((const char*)&dev.id, sizeof(dev.id)))
+		exit(1);
+	if (cout.eof())
+		exit(0);
+
 	cerr << "Getting input bits." << endl;
 	if (ioctl(fd, EVIOCGBIT(0, sizeof(input_bits)), &input_bits) == -1) {
 		cErr << "Failed to get input-event bits: " << err << endl;
 		goto error;
 	}
-	cout.write((const char*)input_bits, sizeof(input_bits));
+	if (!cout.write((const char*)input_bits, sizeof(input_bits)))
+		exit(1);
+	if (cout.eof())
+		exit(0);
 
 #define TransferBitsFor(REL, rel, REL_MAX) \
 	do { \
@@ -181,10 +194,13 @@ int read_device(const char *devfile)
 			cErr << "Failed to get " #rel " bits: " << err << endl; \
 			goto error; \
 		} \
-		cout.write((const char*)&bits##rel, sizeof(bits##rel)); \
+		if (!cout.write((const char*)&bits##rel, sizeof(bits##rel))) \
+			exit(1); \
+		if (cout.eof()) \
+			exit(0); \
 	} \
 	} while(0)
-	
+
 	TransferBitsFor(KEY, key, KEY_MAX);
 	TransferBitsFor(ABS, abs, ABS_MAX);
 	TransferBitsFor(REL, rel, REL_MAX);
@@ -201,10 +217,13 @@ int read_device(const char *devfile)
 			cErr << "Failed to get " #key " state: " << err << endl; \
 			goto error; \
 		} \
-		cout.write((const char*)bits##key, sizeof(bits##key)); \
+		if (!cout.write((const char*)bits##key, sizeof(bits##key))) \
+			exit(1); \
+		if (cout.eof()) \
+			exit(0); \
 	} \
 	} while(0)
-	
+
 	TransferDataFor(KEY, key, KEY_MAX);
 	TransferDataFor(LED, led, LED_MAX);
 	TransferDataFor(SW, sw, SW_MAX);
@@ -217,7 +236,10 @@ int read_device(const char *devfile)
 				cErr << "Failed to get device id: " << err << endl;
 				goto error;
 			}
-			cout.write((const char*)&ai, sizeof(ai));
+			if (!cout.write((const char*)&ai, sizeof(ai)))
+				exit(1);
+			if (cout.eof())
+				exit(0);
 		}
 	}
 
@@ -244,24 +266,16 @@ int read_device(const char *devfile)
 			goto error;
 		}
 
-		/*
-		if (ev.type == EV_KEY && ev.code == 161) {
-			if (ev.value == 0) {
-				on = !on;
-				toggle_hook();
-			}
-		} else if (on) {
-			cout.write((const char*)&ev, sizeof(ev));
-			cout.flush();
-		}
-		*/
 		bool old_on = on;
 		if (hotkey_hook(ev.type, ev.code, ev.value)) {
 			if (old_on != on)
 				toggle_hook();
 		}
 		else if (on) {
-			cout.write((const char*)&ev, sizeof(ev));
+			if (!cout.write((const char*)&ev, sizeof(ev)))
+				exit(1);
+			if (cout.eof())
+				exit(0);
 			cout.flush();
 		}
 	}

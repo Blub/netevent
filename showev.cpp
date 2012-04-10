@@ -4,6 +4,7 @@
 #include <sstream>
 #include <signal.h>
 #include <sys/wait.h>
+#include <unistd.h>
 
 const char *evname(unsigned int e)
 {

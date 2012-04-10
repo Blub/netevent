@@ -1,5 +1,7 @@
 #include "main.h"
 
+#include <unistd.h>
+
 unsigned char input_bits[1+EV_MAX/8];
 const char *toggle_file = 0;
 const char *toggle_cmd = 0;

@@ -2,6 +2,7 @@
 #include <sys/wait.h>
 #include <sys/types.h>
 #include <stdint.h>
+#include <unistd.h>
 
 static const char *uinput_file[] = {
 	"/dev/uinput",
