@@ -15,6 +15,7 @@ using std::cin;
 #include <errno.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdint.h>
 
 #define gerr() std::string err(strerror(errno))
 #define cErr gerr(); cerr
@@ -33,6 +34,14 @@ typedef struct {
 	int value;
 	std::string command;
 } hotkey_t;
+
+struct input_event_t {
+	uint64_t tv_sec;
+	uint32_t tv_usec;
+	uint16_t type;
+	uint16_t code;
+	int32_t value;
+};
 
 const char *evname(unsigned int e);
 int evid(const char *name);

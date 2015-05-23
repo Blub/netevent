@@ -1,3 +1,5 @@
+prefix = /usr/local
+bindir = $(prefix)/bin
 CXX = g++
 CC = gcc
 CFLAGS = -Wall -pthread
@@ -25,6 +27,9 @@ netevent: $(patsubst %.cpp,build/%.o,$(SOURCES))
 
 devname: build/devname.o
 	$(CC) -o $@ $^
+
+install: all
+	install -m 755 -p -t "$(DESTDIR)$(bindir)" netevent devname
 
 clean:
 	-rm -rf build

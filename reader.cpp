@@ -82,6 +82,7 @@ static void *tog_func(void *ign)
 			cErr << "Failed to open '" << toggle_file << "': " << err << endl;
 			break;
 		}
+		memset(dat, 0, sizeof(dat));
 		read(tfd, dat, sizeof(dat));
 		close(tfd);
 		dat[sizeof(dat)-1] = 0;
@@ -157,11 +158,9 @@ int read_device(const char *devfile)
 	cerr << "BusType: " << dev.id.bustype << endl;
 
 	// First thing to write is the size of the structures as a 16 bit uint!
-	uint16_t strsz[3];
-	strsz[0] = sizeof(ev.time);
-	strsz[1] = sizeof(ev);
-	strsz[2] = sizeof(dev);
-	if (!cout.write((const char*)strsz, sizeof(strsz)))
+	uint16_t strsz;
+	strsz = sizeof(dev);
+	if (!cout.write((const char*)&strsz, sizeof(strsz)))
 		exit(1);
 	if (cout.eof())
 		exit(0);
@@ -272,7 +271,13 @@ int read_device(const char *devfile)
 				toggle_hook();
 		}
 		else if (on) {
-			if (!cout.write((const char*)&ev, sizeof(ev)))
+			input_event_t et;
+			et.tv_sec = ev.time.tv_sec;
+			et.tv_usec = ev.time.tv_usec;
+			et.type = ev.type;
+			et.code = ev.code;
+			et.value = ev.value;
+			if (!cout.write((const char*)&et, sizeof(et)))
 				exit(1);
 			if (cout.eof())
 				exit(0);

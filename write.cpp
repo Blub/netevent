@@ -11,7 +11,7 @@ static const char *uinput_file[] = {
 };
 static const size_t uinput_cnt = sizeof(uinput_file) / sizeof(uinput_file[0]);
 
-static uint16_t strsz[3];
+static uint16_t strsz;
 
 int spawn_device()
 {
@@ -33,23 +33,10 @@ int spawn_device()
 
 	struct uinput_user_dev dev;
 	struct input_event ev;
-	char *evreadpos = (char*)&ev;
 
-	cin.read((char*)strsz, sizeof(strsz));
-	if (strsz[2] != sizeof(uinput_user_dev)) {
+	cin.read((char*)&strsz, sizeof(strsz));
+	if (strsz != sizeof(uinput_user_dev)) {
 		cerr << "Device information field sizes do not match. Sorry." << endl;
-		return 1;
-	}
-
-	if (strsz[1] != sizeof(ev)) {
-		cerr << "Beware, devices may be incompatible\n" <<
-			"Host input_event: size: " << strsz[1] <<
-			", timeval size: " << sizeof(ev) << std::endl;
-	}
-
-	if ((sizeof(ev) - sizeof(ev.time)) != (strsz[1] - strsz[0]))
-	{
-		cerr << "input-event sizes are incompatible, sorry." << endl;
 		return 1;
 	}
 
@@ -131,24 +118,19 @@ int spawn_device()
 	}
 
 	cerr << "Transferring input events." << endl;
-	char field[512];
-	memset(field, -1, sizeof(field));
-	if (sizeof(ev) == strsz[1])
-		evreadpos = (char*)&ev;
-	else
-		evreadpos = (char*)field;
 	while (true) {
+		input_event_t et;
 		int dummy;
 		waitpid(0, &dummy, WNOHANG);
-		if (!cin.read(evreadpos, sizeof(ev))) {
+		if (!cin.read((char*)&et, sizeof(et))) {
 			cerr << "End of data" << endl;
 			break;
 		}
-		if (evreadpos != (char*)&ev)
-		{
-			memcpy(((char*)&ev) + sizeof(ev.time), evreadpos + strsz[0], sizeof(ev) - sizeof(ev.time));
-			gettimeofday(&ev.time, 0);
-		}
+	ev.time.tv_sec = et.tv_sec;
+	ev.time.tv_usec = et.tv_usec;
+	ev.type = et.type;
+	ev.code = et.code;
+	ev.value = et.value;
 		if (hotkey_hook(ev.type, ev.code, ev.value))
 			continue;
 		if (write(fd, &ev, sizeof(ev)) < (ssize_t)sizeof(ev)) {
