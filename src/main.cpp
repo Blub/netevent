@@ -190,33 +190,6 @@ parseULong(unsigned long *out, const char *s, size_t maxlen)
 	return false;
 }
 
-struct {
-	unsigned int      num;
-	const char *const name;
-} static const
-kEVMap[] = {
-	{ EV_SYN,       "SYN" },
-	{ EV_KEY,       "KEY" },
-	{ EV_REL,       "REL" },
-	{ EV_ABS,       "ABS" },
-	{ EV_MSC,       "MSC" },
-	{ EV_SW ,       "SW " },
-	{ EV_LED,       "LED" },
-	{ EV_SND,       "SND" },
-	{ EV_REP,       "REP" },
-	{ EV_FF,        "FF" },
-	{ EV_PWR,       "PWR" },
-	{ EV_FF_STATUS, "FF_STATUS" },
-};
-
-static constexpr const char*
-EV2String(unsigned int ev)
-{
-	return (ev < sizeof(kEVMap)/sizeof(kEVMap[0]))
-		? kEVMap[ev].name
-		: "<Unknown>";
-}
-
 unsigned int
 String2EV(const char* text, size_t length)
 {

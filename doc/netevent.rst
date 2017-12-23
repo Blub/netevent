@@ -109,6 +109,9 @@ DAEMON COMMANDS
 ``device remove`` *NAME*
     Remove an evdev device.
 
+``info``
+    Show current inputs, outputs, devices and hotkeys.
+
 BUGS
 ====
 

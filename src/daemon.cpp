@@ -865,6 +865,52 @@ clientCommand_Hotkey(int clientfd, const vector<string>& args)
 		                   args[1].c_str());
 }
 
+static void
+clientCommand_Info(int clientfd, const vector<string>& args)
+{
+	(void)args;
+
+	toClient(clientfd, "Grab: %s\n", gGrab ? "on" : "off");
+	toClient(clientfd, "Inputs: %zu\n", gInputs.size());
+	for (auto& i: gInputs) {
+		toClient(clientfd, "    %u: %s: %i\n",
+		         i.second.id_,
+		         i.first.c_str(),
+		         i.second.device_->fd());
+	}
+
+	toClient(clientfd, "Outputs: %zu\n", gOutputs.size());
+	for (auto& i: gOutputs) {
+		toClient(clientfd, "    %s: %i\n",
+		         i.first.c_str(),
+		         i.second.fd());
+	}
+
+	toClient(clientfd, "Current output: %i: %s\n",
+	         gCurrentOutput.fd, gCurrentOutput.name.c_str());
+
+	toClient(clientfd, "Hotkeys:\n");
+	unsigned int evtype = 0;
+	for (auto& di: gHotkeys) {
+		for (auto& ci: di) {
+			auto device = ci.first;
+			for (auto& vi: ci.second) {
+				auto code = vi.first;
+				for (auto& v: vi.second) {
+					auto value = v.first;
+					toClient(clientfd,
+					         "    %u: %s:%u:%i => %s\n",
+					         device,
+					         EV2String(evtype),
+					         code, value,
+					         v.second.c_str());
+				}
+			}
+		}
+		++evtype;
+	}
+}
+
 static void sourceCommandFile(int clientfd, const char *path);
 static void
 clientCommand(int clientfd, const vector<string>& args)
@@ -879,6 +925,8 @@ clientCommand(int clientfd, const vector<string>& args)
 		clientCommand_Output(clientfd, args);
 	else if (args[0] == "hotkey")
 		clientCommand_Hotkey(clientfd, args);
+	else if (args[0] == "info")
+		clientCommand_Info(clientfd, args);
 	else if (args[0] == "grab") {
 		if (args.size() != 2)
 			throw Exception("'grab' requires 1 parameter");
