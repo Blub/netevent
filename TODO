@@ -6,3 +6,4 @@
 * a) INotify to listen to devices being created?
   b) Use systemd service files to tell the daemon about new devices?
 * SystemD service file examples for .config/systemd/user ?
+* Broadcast a keep-alive/ping packet every some seconds.
