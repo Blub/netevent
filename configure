@@ -1,0 +1,121 @@
+#!/bin/sh
+
+enable_doc=auto
+
+help() {
+  cat <<EOF
+usage: ./configure [options]
+options:
+  --help             show this help message
+  --prefix=DIR       installation prefix
+  --bindir=DIR       binary dir (PREFIX/bin)
+  --datarootdir=DIR  data root directory (PREFIX/share)
+  --mandir=DIR       manual page root directory (DATAROOTDIR/man)
+  --man1dir=DIR      section 1 manual page directory (MANDIR/man1)
+  --enable-doc       enable documentation (default: if rst2man is found)
+  --disable-doc      disable documentation
+EOF
+}
+
+for opt; do
+  case "$opt" in
+    -h|--h|--help) help; exit 0 ;;
+    --prefix=*) PREFIX="${opt#--prefix=}" ;;
+    --bindir=*) BINDIR="${opt#--bindir=}" ;;
+    --datarootdir=*) DATAROOTDIR="${opt#--datarootdir=}" ;;
+    --mandir=*) MANDIR="${opt#--mandir=}" ;;
+    --man1dir=*) MAN1DIR="${opt#--man1dir=}" ;;
+    --enable-doc=*) enable_doc="${doc#--enable-doc=}" ;;
+    --enable-doc)   enable_doc=yes ;;
+    --disable-doc)  enable_doc=no ;;
+  esac
+done
+
+PREFIX="${PREFIX:-/usr/local}"
+BINDIR="${BINDIR:-${PREFIX}/bin}"
+DATAROOTDIR="${DATAROOTDIR:-${PREFIX}/share}"
+MANDIR="${MANDIR:-${DATAROOTDIR}/man}"
+MAN1DIR="${MAN1DIR:-${MANDIR}/man1}"
+
+if test -z "$CXX"; then
+  if which clang++ >/dev/null 2>&1; then
+    CXX=clang++
+  elif which g++ >/dev/null 2>&1; then
+    CXX=g++
+  else
+    echo
+    echo "failed to find a compiler, please set \$CXX" >&2
+    exit 1
+  fi
+fi
+
+echo -n 'Checking for rst2man...'
+case "$enable_doc" in
+  auto|[Yy][Ee][Ss]|1|[Oo][Nn]|[Tt][Rr][Uu][Ee])
+    ENABLE_DOC=y
+    RST2MAN="$(which rst2man 2>/dev/null)"
+    if [ $? -ne 0 ]; then
+      ENABLE_DOC=
+      RST2MAN=
+      if [ "x$enable_doc" != "xauto" ]; then
+        echo "failed to find rst2man" >&2
+        exit 1
+      fi
+    fi
+    ;;
+  *)
+    ENABLE_DOC=
+    RST2MAN=
+    ;;
+esac
+if [ "x$ENABLE_DOC" = x ]; then
+  echo 'no, disabling documentation building'
+else
+  echo "$RST2MAN"
+fi
+
+trycc() {
+  echo "$1" >.cfgtest.cpp
+  $CXX $CPPFLAGS $CXXFLAGS -c -o .cfgtest.o .cfgtest.cpp
+  try_compile_result="$?"
+  rm -f .cfgtest.o .cfgtest.cpp
+  return $try_compile_result
+}
+
+UI_DEV_CKPROG="#include <sys/ioctl.h>
+#include <linux/uinput.h>
+int main() {
+  ioctl(0, UI_DEV_SETUP);
+  ioctl(0, UI_ABS_SETUP);
+  return 0;
+}
+"
+
+echo -n 'Checking for UI_DEV_SETUP (kernel >= 4.4)...'
+if trycc "$UI_DEV_CKPROG"; then
+  HAS_UI_DEV_SETUP='#define HAS_UI_DEV_SETUP'
+  echo "ok"
+else
+  HAS_UI_DEV_SETUP='/* #undef HAS_UI_DEV_SETUP */'
+  echo "no (disabling)"
+fi
+
+rm -f config.h
+echo '#ifndef NETEVENT_2_CONFIG_H' >>config.h
+echo '#define NETEVENT_2_CONFIG_H' >>config.h
+echo >>config.h
+echo "$HAS_UI_DEV_SETUP" >>config.h
+echo >>config.h
+echo '#endif' >>config.h
+
+rm -f config.mak
+cat >config.mak <<EOF
+PREFIX = ${PREFIX}
+BINDIR = ${BINDIR}
+DATAROOTDIR = ${DATAROOTDIR}
+MANDIR = ${MANDIR}
+MAN1DIR = ${MAN1DIR}
+ENABLE_DOC = ${ENABLE_DOC}
+RST2MAN = ${RST2MAN}
+EOF
+
