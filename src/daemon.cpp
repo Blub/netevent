@@ -648,7 +648,7 @@ shellCommand(const char *cmd)
 {
 	// let's keep it simple for now...
 	// stdout/stderr stay
-	(void)system(cmd);
+	(void)!::system(cmd);
 }
 
 static inline constexpr bool
