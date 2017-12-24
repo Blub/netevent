@@ -66,9 +66,7 @@ install-do: $(BINARY) $(MAN1PAGES)
 	install -dm755 $(DESTDIR)$(BINDIR)
 	install -Tm755 $(BINARY) $(DESTDIR)$(BINDIR)/$(BINARY)
 	install -dm755 $(DESTDIR)$(MAN1DIR)
-	for i in $(MAN1PAGES); do \
-	  install -Tm755 $$i $(DESTDIR)$(MAN1DIR) \
-	done
+	install -m644 -t $(DESTDIR)$(MAN1DIR) $(MAN1PAGES)
 
 distclean: clean
 	rm -f config.h
