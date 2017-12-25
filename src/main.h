@@ -332,6 +332,9 @@ struct InDevice {
 	void writeNeteventHeader(int fd);
 	void writeNE2AddDevice(int fd, uint16_t id);
 
+	void setName(const string&);
+	void resetName(); // Set to original name (remembered in name_)
+
 	void grab(bool on);
 	bool grab() const noexcept {
 		return grabbing_;
@@ -344,6 +347,14 @@ struct InDevice {
 
 	int fd() const noexcept {
 		return fd_;
+	}
+
+	const char* name() const noexcept {
+		return user_dev_.name;
+	}
+
+	const string& realName() const noexcept {
+		return name_;
 	}
 
  private:

@@ -98,6 +98,24 @@ InDevice::read(InputEvent *out)
 }
 
 void
+InDevice::setName(const string& name)
+{
+	if (name.length() >= sizeof(user_dev_.name))
+		throw MsgException("name too long (%zu > %zu)",
+		                   name.length(),
+		                   sizeof(user_dev_.name)-1);
+	::memcpy(user_dev_.name, name.c_str(), name.length());
+	::memset(&user_dev_.name[name.length()], 0,
+	         sizeof(user_dev_.name) - name.length());
+}
+
+void
+InDevice::resetName()
+{
+	setName(name_);
+}
+
+void
 InDevice::writeNeteventHeader(int fd)
 {
 	uint16_t strsz = sizeof(user_dev_);

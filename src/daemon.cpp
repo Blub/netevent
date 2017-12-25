@@ -466,13 +466,19 @@ addDevice(const string& name, const char *path)
 	}
 }
 
-static void
-removeDevice(const string& name)
+static InDevice*
+findDevice(const string& name)
 {
 	auto iter = gInputs.find(name);
 	if (iter == gInputs.end())
 		throw MsgException("no such device: %s", name.c_str());
-	closeDevice(iter->second.device_.get());
+	return iter->second.device_.get();
+}
+
+static void
+removeDevice(const string& name)
+{
+	closeDevice(findDevice(name));
 }
 
 static void
@@ -755,6 +761,24 @@ clientCommand_Device(int clientfd, const vector<string>& args)
 		removeDevice(args[2]);
 		toClient(clientfd, "removing device %s\n",
 		         args[2].c_str());
+	}
+	else if (args[1] == "rename") {
+		if (args.size() != 4)
+			throw Exception(
+			    "'device rename' requires a device and a name");
+		auto dev = findDevice(args[2]);
+		dev->setName(args[3]);
+		toClient(clientfd, "renamed device %s to %s\n",
+		         dev->realName().c_str(), args[3].c_str());
+	}
+	else if (args[1] == "reset-name") {
+		if (args.size() != 3)
+			throw Exception(
+			    "'device reset-name' requires a device");
+		auto dev = findDevice(args[2]);
+		dev->resetName();
+		toClient(clientfd, "reset name of device %s\n",
+		         dev->realName().c_str());
 	}
 	else
 		throw MsgException("unknown device subcommand: %s",

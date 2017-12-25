@@ -108,8 +108,8 @@ DAEMON COMMANDS
 ``use`` *OUTPUT*
     Set the current output.
 
-``output add`` [``--resume``] *NAME* *OUTPUT_SPEC*
-    Add a new output. *NAME* can be an arbitrary name used later for
+``output add`` [``--resume``] *OUTPUT_NAME* *OUTPUT_SPEC*
+    Add a new output. *OUTPUT_NAME* can be an arbitrary name used later for
     ``output remove`` or ``use`` commands. *OUTPUT_SPEC* can currently be
     either a file/fifo, a command to pipe to when prefixed with *exec:*, or the
     name of a unix or abstract socket when using *unix:/path* or
@@ -118,11 +118,11 @@ DAEMON COMMANDS
     If the ``--resume`` parameter is provided, assume the destination already
     knows all the existing devices and do not recreate them.
 
-``output remove`` *NAME*
+``output remove`` *OUTPUT_NAME*
     Remove an existing output.
 
-``output use`` *NAME*
-    Long version of ``use`` *NAME*.
+``output use`` *OUTPUT_NAME*
+    Long version of ``use`` *OUTPUT_NAME*.
 
 ``exec`` *COMMAND*
     Execute a command. Mostly useful for hotkeys.
@@ -133,20 +133,27 @@ DAEMON COMMANDS
 ``quit``
     Cause the daemon to quit.
 
-``hotkey add`` *DEVICE* *EVENT* *COMMAND*
+``hotkey add`` *DEVICE_NAME* *EVENT* *COMMAND*
     Add a hotkey to an existing device. *DEVICE* is the name used when
     adding the device via ``device add``. *EVENT* is an event specification
     of the form *TYPE*:*CODE*:*VALUE*, as printed out by ``netevent show``.
     *COMMAND* is a daemon command to be executed when the event is read.
 
-``hotkey remove`` *DEVICE* *EVDENT*
+``hotkey remove`` *DEVICE_NAME* *EVDENT*
     Remove a hotkey for an event on a device.
 
-``device add`` *NAME* *EVENT_DEVICE_FILE*
+``device add`` *DEVICE_NAME* *EVENT_DEVICE_FILE*
     Register an evdev device.
 
-``device remove`` *NAME*
+``device remove`` *DEVICE_NAME*
     Remove an evdev device.
+
+``device rename`` *DEVICE_NAME* *NEW_NAME*
+    Rename a device. Useful when adding output of which the devices should have
+    a recognizable name.
+
+``device reset-name`` *DEVICE_NAME*
+    Reset a device's name to its default.
 
 ``info``
     Show current inputs, outputs, devices and hotkeys.
