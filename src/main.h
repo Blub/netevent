@@ -488,6 +488,8 @@ mustRead(int fd, void *buf, size_t length)
 {
 	while (length) {
 		auto got = ::read(fd, buf, length);
+		if (got == 0)
+			errno = 0;
 		if (got <= 0)
 			return false;
 		if (size_t(got) > length) {
