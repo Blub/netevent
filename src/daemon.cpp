@@ -214,7 +214,7 @@ readCommand(FILE *file)
 	if (got < 0) {
 		if (errno)
 			::fprintf(stderr,
-			          "error reading from command client: %s",
+			          "error reading from command client: %s\n",
 			          ::strerror(errno));
 		disconnectClient(::fileno(file));
 		return;
