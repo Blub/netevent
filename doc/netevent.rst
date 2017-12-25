@@ -68,6 +68,10 @@ All subcommands:
     to the configured ``--duplicates`` mode. Alternatively ``end`` can be used
     to cause the main loop to exit successfully.
 
+``--daemonize``
+    Run as a background daemon. When using ``--listen`` it may also desirable
+    to run netevent in the background.
+
 ``netevent cat`` and ``netevent create``
 ----------------------------------------
 

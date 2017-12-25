@@ -376,6 +376,13 @@ cmd_cat(int argc, char **argv)
 }
 
 static void
+doDaemonize(bool can_close)
+{
+	if (::daemon(1, can_close ? 0 : 1) != 0)
+		throw ErrnoException("daemon() failed");
+}
+
+static void
 usage_create [[noreturn]] (FILE *out, int exit_status)
 {
 	::fprintf(out,
@@ -387,6 +394,7 @@ usage_create [[noreturn]] (FILE *out, int exit_status)
 "  --duplicates=MODE      how to deal with duplicate devices\n"
 "  --listen=SOCKSPEC      listen on a socket instead of reading from stdin\n"
 "  --on-close=end|accept  whether to exit or restart on EOF\n"
+"  --daemonize            fork off into the background\n"
 "duplicate device modes:\n"
 "  reject                 treat duplicates as errors and exit (default)\n"
 "  resume                 assume the devices are equivalent and resume them\n"
@@ -423,11 +431,14 @@ cmd_create(int argc, char **argv)
 		{ "duplicates",     required_argument, nullptr, 'd' },
 		{ "listen",         required_argument, nullptr, 0x1001 },
 		{ "on-close",       required_argument, nullptr, 0x1002 },
+		{ "daemonize",      no_argument,       nullptr, 0x1003 },
+		{ "no-daemonize",   no_argument,       nullptr, 0xf003 },
 		{ nullptr, 0, nullptr, 0 }
 	};
 
 	bool no_legacy = false;
 	bool optLegacyMode = false;
+	bool optDaemonize = false;
 	enum class DuplicateMode { Reject, Resume, Replace }
 	optDuplicates = DuplicateMode::Reject;
 	enum class CloseAction { End, Accept }
@@ -448,6 +459,8 @@ cmd_create(int argc, char **argv)
 			// break; usage is [[noreturn]]
 		 case 'l':    optLegacyMode = true; break;
 		 case 0x1000: optLegacyMode = false; break;
+		 case 0x1003: optDaemonize = true; break;
+		 case 0xf003: optDaemonize = false; break;
 		 case 'd':
 			no_legacy = true;
 			if (!::strcasecmp(optarg, "reject"))
@@ -498,6 +511,9 @@ cmd_create(int argc, char **argv)
 		::fprintf(stderr, "too many arguments\n");
 		usage_create(stderr, EXIT_FAILURE);
 	}
+
+	if (optDaemonize)
+		doDaemonize(optListen);
 
 	if (optLegacyMode)
 		return cmd_create_legacy();
