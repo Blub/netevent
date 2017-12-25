@@ -447,7 +447,7 @@ cmd_create(int argc, char **argv)
 			usage_create(stdout, EXIT_SUCCESS);
 			// break; usage is [[noreturn]]
 		 case 'l':    optLegacyMode = true; break;
-		 case 0x2000: optLegacyMode = false; break;
+		 case 0x1000: optLegacyMode = false; break;
 		 case 'd':
 			no_legacy = true;
 			if (!::strcasecmp(optarg, "reject"))
