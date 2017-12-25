@@ -70,6 +70,12 @@ InDevice::InDevice(const string& path)
 	    "failed to query event device capabilities");
 }
 
+InDevice::~InDevice()
+{
+	if (fd_ != -1)
+		::close(fd_);
+}
+
 void
 InDevice::grab(bool on)
 {

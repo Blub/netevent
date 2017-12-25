@@ -77,6 +77,7 @@ struct FILEHandle {
 #pragma clang diagnostic ignored "-Wexit-time-destructors"
 #pragma clang diagnostic ignored "-Wglobal-constructors"
 
+static int                   gServerFD;
 static bool                  gQuit = false;
 static vector<int>           gFDRemoveQueue;
 static vector<struct pollfd> gFDAddQueue;
@@ -96,6 +97,8 @@ using CodeHotkeyMap   = map<uint16_t, ValueHotkeyMap>;
 //using TypeHotkeyMap   = map<uint16_t, CodeHotkeyMap>;
 using DeviceHotkeyMap = map<uint16_t, CodeHotkeyMap>;
 static DeviceHotkeyMap gHotkeys[EV_CNT];
+
+static vector<function<void()>> gPreExecStack;
 #pragma clang diagnostic pop
 
 #if 0
@@ -108,6 +111,27 @@ vectorRemove(vector<T>& vec, T&& value)
 		vec.erase(iter);
 }
 #endif
+
+static ScopeGuard
+preExec(function<void()> func)
+{
+	auto idx = gPreExecStack.size();
+	gPreExecStack.emplace_back(move(func));
+	return {[idx]() { gPreExecStack[idx] = nullptr; }};
+}
+
+static void
+daemon_preExec()
+{
+	for (auto& f: gPreExecStack)
+		if (f)
+			f();
+	::close(gServerFD);
+	gCommandClients.clear(); // closes fds
+	gInputs.clear(); // closes event devices
+	gOutputs.clear();
+	gFDCBs.clear();
+}
 
 template<typename T, typename U>
 static void
@@ -565,6 +589,7 @@ addOutput_Exec(const char *path)
 			}
 			pr.close();
 		}
+		daemon_preExec();
 		::execlp("/bin/sh", "/bin/sh", "-c", path, nullptr);
 		::perror("exec() failed");
 		::exit(-1);
@@ -685,9 +710,19 @@ removeHotkey(uint16_t device, uint16_t type, uint16_t code, int32_t value)
 static void
 shellCommand(const char *cmd)
 {
-	// let's keep it simple for now...
-	// stdout/stderr stay
-	(void)!::system(cmd);
+	pid_t pid = ::fork();
+	if (pid == -1)
+		throw ErrnoException("fork() failed");
+	if (!pid) {
+		daemon_preExec();
+		::execlp("/bin/sh", "/bin/sh", "-c", cmd, nullptr);
+		::perror("exec() failed");
+		::exit(-1);
+	}
+	int status = 0;
+	do {
+		// wait
+	} while (::waitpid(pid, &status, 0) != pid);
 }
 
 static inline constexpr bool
@@ -1098,6 +1133,10 @@ sourceCommandFile(int clientfd, const char *path)
 		throw ErrnoException("open(%s)", path);
 	char *line = nullptr;
 
+	auto exec_guard = preExec([file,&line]() {
+		::fclose(file);
+		::free(line);
+	});
 	scope (exit) {
 		::fclose(file);
 		::free(line);
@@ -1199,6 +1238,8 @@ cmd_daemon(int argc, char **argv)
 		(void)::unlink(sockname);
 		server.listenUnix<false>(sockname);
 	}
+
+	gServerFD = server.fd();
 
 	vector<struct pollfd> pfds;
 	pfds.resize(1);

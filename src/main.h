@@ -328,6 +328,7 @@ struct InDevice {
 	InDevice(InDevice&&);
 	InDevice(const InDevice&) = delete;
 	InDevice(const string& path);
+	~InDevice();
 
 	void writeNeteventHeader(int fd);
 	void writeNE2AddDevice(int fd, uint16_t id);
