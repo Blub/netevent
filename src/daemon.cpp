@@ -490,12 +490,6 @@ finishOutputRemoval(int fd)
 }
 
 // TODO:
-// All of these would be nice to have
-//   - unix:/a/path
-//   - unix:@abstract/name
-//           For ease of use.
-//
-// Less important:
 //   - tcp:IP PORT
 //   - tcp:HOSTNAME PORT
 //   - tcp:[IP] PORT
@@ -574,6 +568,17 @@ addOutput_Exec(const char *path)
 	return pw;
 }
 
+static IOHandle
+addOutput_Unix(const char *path)
+{
+	Socket socket;
+	if (path[0] == '@')
+		socket.connectUnix<true>(path+1);
+	else
+		socket.connectUnix<false>(path);
+	return socket.intoIOHandle();
+}
+
 static void
 addOutput(const string& name, const char *path, bool skip_announce)
 {
@@ -583,6 +588,8 @@ addOutput(const string& name, const char *path, bool skip_announce)
 	IOHandle handle;
 	if (::strncmp(path, "exec:", sizeof("exec:")-1) == 0)
 		handle = addOutput_Exec(path+(sizeof("exec:")-1));
+	else if (::strncmp(path, "unix:", sizeof("unix:")-1) == 0)
+		handle = addOutput_Unix(path+(sizeof("unix:")-1));
 	else
 		handle = addOutput_Open(path);
 
