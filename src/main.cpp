@@ -17,7 +17,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include <getopt.h>
+#include <sys/types.h>
+#include <sys/wait.h>
 #include <stdarg.h>
+#include <unistd.h>
 #include <map>
 using std::map;
 
@@ -53,12 +56,13 @@ ErrnoException::ErrnoException(ErrnoException&& o)
 	: Exception(msgbuf_) // we have to copy instead of moving
 {
 	::strncpy(msgbuf_, o.msgbuf_, sizeof(msgbuf_));
+	errno_ = o.errno_;
 }
 
 ErrnoException::ErrnoException(const char *msg, ...)
 	: Exception(msgbuf_)
 {
-	int errcode = errno;
+	errno_ = errno;
 	va_list ap;
 	va_start(ap, msg);
 	int end = ::vsnprintf(msgbuf_, sizeof(msgbuf_), msg, ap);
@@ -67,7 +71,7 @@ ErrnoException::ErrnoException(const char *msg, ...)
 		end = 0;
 	::snprintf(msgbuf_ + end,
 	           sizeof(msgbuf_)-size_t(end),
-	           ": %s", ::strerror(errcode));
+	           ": %s", ::strerror(errno_));
 	msgbuf_[sizeof(msgbuf_)-1] = 0;
 }
 #pragma clang diagnostic pop
@@ -393,6 +397,7 @@ usage_create [[noreturn]] (FILE *out, int exit_status)
 "  --no-legacy            run in netevent 2 mode (default)\n"
 "  --duplicates=MODE      how to deal with duplicate devices\n"
 "  --listen=SOCKSPEC      listen on a socket instead of reading from stdin\n"
+"  --connect              try to connect before creating a new instance\n"
 "  --on-close=end|accept  whether to exit or restart on EOF\n"
 "  --daemonize            fork off into the background\n"
 "duplicate device modes:\n"
@@ -422,6 +427,20 @@ cmd_create_legacy()
 }
 
 static int
+cat(int from, int to)
+{
+	char buf[1024];
+	ssize_t got;
+	while ((got = ::read(from, buf, sizeof(buf))) > 0) {
+		if (!mustWrite(to, buf, size_t(got)))
+			throw ErrnoException("write error");
+	}
+	if (got < 0)
+		throw ErrnoException("read error");
+	return 0;
+}
+
+static int
 cmd_create(int argc, char **argv)
 {
 	static struct option longopts[] = {
@@ -433,12 +452,15 @@ cmd_create(int argc, char **argv)
 		{ "on-close",       required_argument, nullptr, 0x1002 },
 		{ "daemonize",      no_argument,       nullptr, 0x1003 },
 		{ "no-daemonize",   no_argument,       nullptr, 0xf003 },
+		{ "connect",        no_argument,       nullptr, 0x1004 },
+		{ "no-connect",     no_argument,       nullptr, 0xf004 },
 		{ nullptr, 0, nullptr, 0 }
 	};
 
 	bool no_legacy = false;
 	bool optLegacyMode = false;
 	bool optDaemonize = false;
+	bool optConnect = false;
 	enum class DuplicateMode { Reject, Resume, Replace }
 	optDuplicates = DuplicateMode::Reject;
 	enum class CloseAction { End, Accept }
@@ -461,6 +483,8 @@ cmd_create(int argc, char **argv)
 		 case 0x1000: optLegacyMode = false; break;
 		 case 0x1003: optDaemonize = true; break;
 		 case 0xf003: optDaemonize = false; break;
+		 case 0x1004: optConnect = true; break;
+		 case 0xf004: optConnect = false; break;
 		 case 'd':
 			no_legacy = true;
 			if (!::strcasecmp(optarg, "reject"))
@@ -507,30 +531,80 @@ cmd_create(int argc, char **argv)
 		return 2;
 	}
 
+	if (optConnect && !optListen) {
+		::fprintf(stderr,
+		    "--connect requires --listen\n");
+		return 2;
+	}
+
 	if (::optind != argc) {
 		::fprintf(stderr, "too many arguments\n");
 		usage_create(stderr, EXIT_FAILURE);
 	}
 
-	if (optDaemonize)
-		doDaemonize(optListen);
-
-	if (optLegacyMode)
+	if (optLegacyMode) {
+		if (optDaemonize)
+			doDaemonize(optListen);
 		return cmd_create_legacy();
+	}
 
 	map<uint16_t, uniq<OutDevice>> devices;
 
 	int infd = 0;
+	IOHandle outhandle;
 	Socket serversock;
 	IOHandle inhandle;
+
+	if (optConnect) {
+		try {
+			if (optListen[0] == '@')
+				serversock.connectUnix<true>(optListen+1);
+			else
+				serversock.connectUnix<false>(optListen);
+			outhandle = serversock.release();
+		} catch (ErrnoException& ex) {
+			if (!optDaemonize || ex.error() != ECONNREFUSED)
+				throw;
+		}
+		if (outhandle) {
+			return cat(0, outhandle.fd());
+		}
+		int p[2];
+		if (::pipe(p) != 0)
+			throw ErrnoException("pipe() failed");
+		inhandle = p[0];
+		IOHandle p1 { p[1] };
+
+		pid_t dmn = ::fork();
+		if (dmn == -1)
+			throw ErrnoException("fork() failed");
+
+		if (dmn) {
+			inhandle.close();
+			// wait for the daemonization
+			int status;
+			(void)::waitpid(dmn, &status, 0);
+			return cat(0, p1.fd());
+		}
+		// this is the regular netevent process
+		// its first client will not come from the socket, but
+		// from the above created pipe()
+		infd = inhandle.fd();
+		p1.close();
+	}
+
+	if (optDaemonize)
+		doDaemonize(optListen);
 
 	if (optListen) {
 		if (optListen[0] == '@')
 			serversock.listenUnix<true>(optListen+1);
 		else
 			serversock.listenUnix<false>(optListen);
-		inhandle = serversock.accept();
-		infd = inhandle.fd();
+		if (!inhandle) {
+			inhandle = serversock.accept();
+			infd = inhandle.fd();
+		}
 		if (optOnClose == CloseAction::End)
 			serversock.close();
 	}

@@ -62,6 +62,13 @@ All subcommands:
     Rather than reading from stdin, listen on the specified unix (or abstract
     if prefixed with "@") socket.
 
+``--connect``
+    Used together with ``--listen`` this causes netevent to first try to
+    connect to the socket. If successful, it'll pass events through to the
+    instance it connected to. Otherwise, if ``--daemonize`` was also specified,
+    it'll fork off a new instance to which it connects first. If
+    ``--daemonize`` was not specified it'll return an error code.
+
 ``--on-close=end|accept``
     When using ``--listen``, this option decides how to proceed after a client
     disconnects. The default is to ``accept`` a new client and resume according

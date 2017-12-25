@@ -133,7 +133,9 @@ struct ErrnoException : Exception {
 	ErrnoException(const ErrnoException&) = delete;
 	ErrnoException(ErrnoException&& o);
 	ErrnoException(const char *msg, ...);
+	int error() const noexcept { return errno_; }
  private:
+	int errno_;
 	char msgbuf_[4096];
 };
 #pragma clang diagnostic pop
@@ -417,6 +419,10 @@ struct IOHandle {
 		int fd = fd_;
 		fd_ = -1;
 		return fd;
+	}
+
+	operator bool() const noexcept {
+		return fd_ != -1;
 	}
 
  private:
