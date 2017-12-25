@@ -65,6 +65,7 @@ OutDevice::OutDevice(const string& name, struct input_id id)
 	user_dev_.ff_effects_max = 0;
 #ifdef HAS_UI_DEV_SETUP
 	struct uinput_setup setup;
+	::memset(&setup, 0, sizeof(setup));
 	::memcpy(&setup.id, &user_dev_.id, sizeof(user_dev_.id));
 	::memcpy(setup.name, name.c_str(), name.length());
 	setup.ff_effects_max = user_dev_.ff_effects_max;
