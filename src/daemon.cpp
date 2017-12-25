@@ -506,10 +506,11 @@ finishOutputRemoval(int fd)
 //           Annoying & require an ssl lib but more useful than the non-ssl
 //           variant...
 static void
-addOutput_Finish(const string& name, IOHandle handle)
+addOutput_Finish(const string& name, IOHandle handle, bool skip_announce)
 {
 	int fd = handle.fd();
-	announceAllDevices(fd);
+	if (!skip_announce)
+		announceAllDevices(fd);
 	gOutputs.emplace(name, move(handle));
 	gFDCBs.emplace(fd, FDCallbacks {
 		[fd]() {
@@ -522,8 +523,8 @@ addOutput_Finish(const string& name, IOHandle handle)
 	});
 }
 
-static void
-addOutput_Open(const string& name, const char *path)
+static IOHandle
+addOutput_Open(const char *path)
 {
 	// Use O_NDELAY to not hang on FIFOs. FIFOs should already be waiting
 	// for our connection, we remove O_NONBLOCK below again.
@@ -538,11 +539,11 @@ addOutput_Open(const string& name, const char *path)
 	if (::fcntl(fd, F_SETFL, flags & ~(O_NONBLOCK)) != 0)
 		throw ErrnoException("failed to remove O_NONBLOCK");
 
-	return addOutput_Finish(name, move(handle));
+	return handle;
 }
 
-static void
-addOutput_Exec(const string& name, const char *path)
+static IOHandle
+addOutput_Exec(const char *path)
 {
 	int pfd[2];
 	if (::pipe(pfd) != 0)
@@ -570,19 +571,43 @@ addOutput_Exec(const string& name, const char *path)
 	}
 	pr.close();
 
-	return addOutput_Finish(name, move(pw));
+	return pw;
 }
 
 static void
-addOutput(const string& name, const char *path)
+addOutput(const string& name, const char *path, bool skip_announce)
 {
 	if (gOutputs.find(name) != gOutputs.end())
 		throw MsgException("output already exists: %s", name.c_str());
 
+	IOHandle handle;
 	if (::strncmp(path, "exec:", sizeof("exec:")-1) == 0)
-		return addOutput_Exec(name, path+(sizeof("exec:")-1));
+		handle = addOutput_Exec(path+(sizeof("exec:")-1));
+	else
+		handle = addOutput_Open(path);
 
-	return addOutput_Open(name, path);
+	return addOutput_Finish(name, move(handle), skip_announce);
+}
+
+static void
+addOutput(int clientfd, const vector<string>& args)
+{
+	bool skip_announce = false;
+	size_t at = 2;
+	if (args.size() > at && args[at] == "--resume") {
+		++at;
+		skip_announce = true;
+	}
+
+	if (at+1 >= args.size())
+		throw Exception(
+		    "'output add' requires a name and a path");
+
+	const string& name = args[at++];
+
+	string cmd = join(' ', args.begin()+ssize_t(at), args.end());
+	addOutput(name, cmd.c_str(), skip_announce);
+	toClient(clientfd, "added output %s\n", name.c_str());
 }
 
 static void
@@ -736,12 +761,7 @@ clientCommand_Output(int clientfd, const vector<string>& args)
 		throw Exception("'output': missing subcommand");
 
 	if (args[1] == "add") {
-		if (args.size() <= 3)
-			throw Exception(
-			    "'output add' requires a name and a path");
-		string cmd = join(' ', args.begin()+3, args.end());
-		addOutput(args[2], cmd.c_str());
-		toClient(clientfd, "added output %s\n", args[2].c_str());
+		addOutput(clientfd, args);
 	}
 	else if (args[1] == "remove") {
 		if (args.size() != 3)

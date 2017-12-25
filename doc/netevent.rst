@@ -73,11 +73,14 @@ DAEMON COMMANDS
 ``use`` *OUTPUT*
     Set the current output.
 
-``output add`` *NAME* *OUTPUT_SPEC*
+``output add`` [``--resume``] *NAME* *OUTPUT_SPEC*
     Add a new output. *NAME* can be an arbitrary name used later for
     ``output remove`` or ``use`` commands. *OUTPUT_SPEC* can currently be
     either a file/fifo, or, if prefixed via *exec:*, a command to which the
     data is piped. See the examples above.
+
+    If the ``--resume`` parameter is provided, assume the destination already
+    knows all the existing devices and do not recreate them.
 
 ``output remove`` *NAME*
     Remove an existing output.

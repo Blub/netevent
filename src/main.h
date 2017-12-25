@@ -373,6 +373,13 @@ struct IOHandle {
 			::close(fd_);
 	}
 
+	IOHandle& operator=(IOHandle&& o) {
+		this->close();
+		fd_ = o.fd_;
+		o.fd_ = -1;
+		return (*this);
+	}
+
 	int fd() const noexcept {
 		return fd_;
 	}
