@@ -386,6 +386,7 @@ usage_create [[noreturn]] (FILE *out, int exit_status)
 "  --no-legacy            run in netevent 2 mode (default)\n"
 "  --duplicates=MODE      how to deal with duplicate devices\n"
 "  --listen=SOCKSPEC      listen on a socket instead of reading from stdin\n"
+"  --on-close=end|accept  whether to exit or restart on EOF\n"
 "duplicate device modes:\n"
 "  reject                 treat duplicates as errors and exit (default)\n"
 "  resume                 assume the devices are equivalent and resume them\n"
