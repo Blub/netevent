@@ -1028,12 +1028,21 @@ parseClientCommand(int clientfd, const char *cmd, size_t length)
 		}
 
 		escape = false;
+		string arg;
 		auto beg = cmd;
 		do {
-			escape = (!escape && *cmd == '\\');
-			++cmd;
+			if (!escape && *cmd == '\\') {
+				arg.append(beg, cmd);
+				++cmd;
+				beg = cmd;
+				escape = true;
+			} else {
+				++cmd;
+				escape = false;
+			}
 		} while (*cmd && !isWhite(*cmd) && (escape || *cmd != ';'));
-		args.emplace_back(beg, cmd-beg);
+		arg.append(beg, cmd);
+		args.emplace_back(move(arg));
 		escape = false;
 	}
 
