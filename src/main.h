@@ -433,6 +433,17 @@ struct Socket {
 		return fd_ != -1;
 	}
 
+	int release() noexcept {
+		int fd = fd_;
+		fd_ = -1;
+		return fd;
+	}
+
+	IOHandle intoIOHandle() noexcept {
+		return { release() };
+	}
+
+
  private:
 	int fd_;
 	string path_;
