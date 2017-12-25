@@ -20,26 +20,42 @@
 #include <sys/socket.h>
 #include <sys/un.h>
 
-UnixStream::UnixStream()
+Socket::~Socket()
 {
+	this->close();
+}
+
+void
+Socket::close()
+{
+	if (fd_ != -1) {
+		::close(fd_);
+		fd_ = -1;
+		if (path_.length()) {
+			if (unlink_) {
+				unlink_ = false;
+				::unlink(path_.c_str());
+			}
+			path_.clear();
+		}
+	}
+}
+
+void
+Socket::openUnixStream()
+{
+	close();
 	fd_ = ::socket(AF_UNIX, SOCK_STREAM, 0);
 	if (fd_ < 0)
 		throw ErrnoException("failed to open socket");
 }
 
-UnixStream::~UnixStream()
-{
-	if (path_.length()) {
-		::unlink(path_.c_str());
-		path_.clear();
-	}
-	::close(fd_);
-}
-
 template<bool Abstract>
 void
-UnixStream::listen(const string& path)
+Socket::bindUnix(const string& path)
 {
+	openUnixStream();
+
 	struct sockaddr_un addr;
 	if (path.length() >= sizeof(addr.sun_path))
 		throw MsgException("path too long (%zu >= %zu): '%s'",
@@ -65,19 +81,28 @@ UnixStream::listen(const string& path)
 	    != 0)
 		throw ErrnoException("failed to bind to %s%s",
 		                     (Abstract ? "@" : ""), path.c_str());
-	if (!Abstract)
+	if (!Abstract) {
 		path_ = path;
+		unlink_ = true;
+	}
+}
+template void Socket::bindUnix<true>(const string& path);
+template void Socket::bindUnix<false>(const string& path);
+
+void
+Socket::listen()
+{
 	if (::listen(fd_, 5) != 0)
 		throw ErrnoException("failed to listen on %s%s",
-		                     (Abstract ? "@" : ""), path.c_str());
+		                     path_.c_str());
 }
-template void UnixStream::listen<true>(const string& path);
-template void UnixStream::listen<false>(const string& path);
 
 template<bool Abstract>
 void
-UnixStream::connect(const string& path)
+Socket::connectUnix(const string& path)
 {
+	openUnixStream();
+
 	struct sockaddr_un addr;
 	if (path.length() >= sizeof(addr.sun_path))
 		throw MsgException("path too long (%zu >= %zu): '%s'",
@@ -106,11 +131,11 @@ UnixStream::connect(const string& path)
 		throw ErrnoException("failed to connect to %s%s",
 		                     (Abstract ? "@" : ""), path.c_str());
 }
-template void UnixStream::connect<true>(const string& path);
-template void UnixStream::connect<false>(const string& path);
+template void Socket::connectUnix<true>(const string& path);
+template void Socket::connectUnix<false>(const string& path);
 
 IOHandle
-UnixStream::accept()
+Socket::accept()
 {
 	struct sockaddr_un un;
 	socklen_t slen = sizeof(un);
@@ -122,7 +147,7 @@ UnixStream::accept()
 }
 
 void
-UnixStream::shutdown(bool read_end)
+Socket::shutdown(bool read_end)
 {
 	if (::shutdown(fd_, read_end ? SHUT_RD : SHUT_WR) != 0)
 		throw ErrnoException("shutdown() on socket failed");

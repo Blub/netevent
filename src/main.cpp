@@ -574,12 +574,12 @@ cmd_command(int argc, char **argv)
 	if (!command.length()) // okay
 		return 0;
 
-	UnixStream sock;
+	Socket sock;
 	if (sockname[0] == '@')
-		sock.connect<true>(&sockname[1]);
+		sock.connectUnix<true>(&sockname[1]);
 	else {
 		(void)::unlink(sockname);
-		sock.connect<false>(sockname);
+		sock.connectUnix<false>(sockname);
 	}
 
 	if (!mustWrite(sock.fd(), command.c_str(), command.length())) {

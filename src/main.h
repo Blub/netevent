@@ -411,15 +411,17 @@ struct IOHandle {
 	int fd_;
 };
 
-struct UnixStream {
-	UnixStream();
-	UnixStream(const UnixStream&) = delete;
-	~UnixStream();
+struct Socket {
+	inline Socket() : fd_(-1), path_() {}
+	Socket(const Socket&) = delete;
+	~Socket();
 
-	template<bool Abstract>
-	void listen(const string& path);
-	template<bool Abstract>
-	void connect(const string& path);
+	void openUnixStream();
+	void close();
+	template<bool Abstract> void bindUnix(const string& path);
+	template<bool Abstract> void listenUnix(const string& path);
+	void listen();
+	template<bool Abstract> void connectUnix(const string& path);
 	IOHandle accept();
 	void shutdown(bool read_end);
 
@@ -427,14 +429,26 @@ struct UnixStream {
 		return fd_;
 	}
 
+	operator bool() const noexcept {
+		return fd_ != -1;
+	}
+
  private:
 	int fd_;
 	string path_;
+	bool unlink_ = false;
 };
-extern template void UnixStream::listen<true>(const string& path);
-extern template void UnixStream::listen<false>(const string& path);
-extern template void UnixStream::connect<true>(const string& path);
-extern template void UnixStream::connect<false>(const string& path);
+extern template void Socket::bindUnix<true>(const string& path);
+extern template void Socket::bindUnix<false>(const string& path);
+extern template void Socket::connectUnix<true>(const string& path);
+extern template void Socket::connectUnix<false>(const string& path);
+
+template<bool Abstract>
+inline void
+Socket::listenUnix(const string& path) {
+	bindUnix<Abstract>(path);
+	return listen();
+}
 
 struct ScopeGuard {
 	ScopeGuard() = delete;

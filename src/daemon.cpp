@@ -236,7 +236,7 @@ addFD(int fd, short events = POLLIN | POLLHUP | POLLERR)
 }
 
 static void
-newCommandClient(UnixStream& server)
+newCommandClient(Socket& server)
 {
 	IOHandle h = server.accept();
 	int fd = h.fd();
@@ -1152,12 +1152,12 @@ cmd_daemon(int argc, char **argv)
 	signal(SIGCHLD, signull);
 	signal(SIGPIPE, SIG_IGN);
 
-	UnixStream server;
+	Socket server;
 	if (sockname[0] == '@')
-		server.listen<true>(&sockname[1]);
+		server.listenUnix<true>(&sockname[1]);
 	else {
 		(void)::unlink(sockname);
-		server.listen<false>(sockname);
+		server.listenUnix<false>(sockname);
 	}
 
 	vector<struct pollfd> pfds;
