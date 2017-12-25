@@ -976,19 +976,42 @@ parseClientCommand(int clientfd, const char *cmd, size_t length)
 		return;
 
 	vector<string> args;
+	bool escape = false;
 	while (cmd < end) {
-		if (*cmd == '"' || *cmd == '\'') {
-			args.emplace_back(parseString(cmd));
-		} else {
-			auto beg = cmd;
-			do { ++cmd; } while (*cmd && !isWhite(*cmd));
-			args.emplace_back(beg, cmd-beg);
-		}
 		if (!skipWhite(cmd))
 			break;
+
+		if (!escape) {
+			if (*cmd == '\\') {
+				++cmd;
+				escape = true;
+				continue;
+			} else if (*cmd == ';') {
+				++cmd;
+				if (!args.empty()) {
+					clientCommand(clientfd, args);
+					args.clear();
+				}
+				continue;
+			}
+			else if (*cmd == '"' || *cmd == '\'') {
+				args.emplace_back(parseString(cmd));
+				continue;
+			}
+		}
+
+		escape = false;
+		auto beg = cmd;
+		do {
+			escape = (!escape && *cmd == '\\');
+			++cmd;
+		} while (*cmd && !isWhite(*cmd) && (escape || *cmd != ';'));
+		args.emplace_back(beg, cmd-beg);
+		escape = false;
 	}
 
-	clientCommand(clientfd, args);
+	if (!args.empty())
+		clientCommand(clientfd, args);
 }
 
 static void
