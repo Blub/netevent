@@ -210,6 +210,7 @@ readCommand(FILE *file)
 	char *line = nullptr;
 	scope (exit) { ::free(line); };
 	size_t len = 0;
+	errno = 0;
 	auto got = ::getline(&line, &len, file);
 	if (got < 0) {
 		if (errno)
