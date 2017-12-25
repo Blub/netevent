@@ -844,9 +844,9 @@ clientCommand_Hotkey(int clientfd, const vector<string>& args)
 		         type, code, value, input->second.id_);
 	}
 	else if (args[1] == "remove") {
-		if (args.size() != 3)
+		if (args.size() != 4)
 			throw Exception(
-			    "'hotkey remove' requires a hotkey");
+			    "'hotkey remove': requires device and event code");
 
 		auto input = gInputs.find(args[2]);
 		if (input == gInputs.end())
