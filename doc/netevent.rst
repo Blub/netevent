@@ -30,11 +30,37 @@ OPTIONS
 
 Some options can be used on multiple commands.
 
-``netevent cat`` and ``netevent create``
-----------------------------------------
+All subcommands:
+----------------
 
 ``-h, --help``
     Show a short usage message.
+
+``netevent create``
+----------------------------------------
+
+``--duplicates=``\ *MODE*
+    Change how duplicate devices are to be treated. *MODE* can be:
+
+    ``reject``
+
+        The default. If a device with an already existing ID is received, treat
+        this as an error and exit.
+
+    ``resume``
+
+        Assume the source was restarted and is sending the same device again.
+        Currently this does not verify whether that's actually the case.
+
+    ``replace``
+
+        Remove the previous device and replace it with the new one.
+        Since ``resume`` does not verify the device, this is the preferred mode
+        if the destination event device node does not need to be persistent.
+
+
+``netevent cat`` and ``netevent create``
+----------------------------------------
 
 ``-l, --legacy``
     Use a netevent 1 compatible protocol.

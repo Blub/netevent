@@ -384,6 +384,11 @@ usage_create [[noreturn]] (FILE *out, int exit_status)
 "  -h, --help             show this help message\n"
 "  -l, --legacy           run in netevent 1 compatible mode\n"
 "  --no-legacy            run in netevent 2 mode (default)\n"
+"  --duplicates=MODE      how to deal with duplicate devices\n"
+"duplicate device modes:\n"
+"  reject                 treat duplicates as errors and exit (default)\n"
+"  resume                 assume the devices are equivalent and resume them\n"
+"  replace                remove the previous device and create a new one\n"
 );
 	::exit(exit_status);
 }
@@ -410,18 +415,22 @@ static int
 cmd_create(int argc, char **argv)
 {
 	static struct option longopts[] = {
-		{ "help",      no_argument, nullptr, 'h' },
-		{ "legacy",    no_argument, nullptr, 'l' },
-		{ "no-legacy", no_argument, nullptr, 0x1000 },
+		{ "help",           no_argument,       nullptr, 'h' },
+		{ "legacy",         no_argument,       nullptr, 'l' },
+		{ "no-legacy",      no_argument,       nullptr, 0x1000 },
+		{ "duplicates",     required_argument, nullptr, 'd' },
 		{ nullptr, 0, nullptr, 0 }
 	};
 
+	bool no_legacy = false;
 	bool optLegacyMode = false;
+	enum class DuplicateMode { Reject, Resume, Replace }
+	optDuplicates = DuplicateMode::Reject;
 
 	int c, optindex = 0;
 	opterr = 1;
 	while (true) {
-		c = ::getopt_long(argc, argv, "hl", longopts, &optindex);
+		c = ::getopt_long(argc, argv, "hld:", longopts, &optindex);
 		if (c == -1)
 			break;
 
@@ -429,11 +438,22 @@ cmd_create(int argc, char **argv)
 		 case 'h':
 			usage_create(stdout, EXIT_SUCCESS);
 			// break; usage is [[noreturn]]
-		 case 'l':
-			optLegacyMode = true;
-			break;
-		 case 0x1000:
-			optLegacyMode = false;
+		 case 'l':    optLegacyMode = true; break;
+		 case 0x2000: optLegacyMode = false; break;
+		 case 'd':
+			no_legacy = true;
+			if (!::strcasecmp(optarg, "reject"))
+				optDuplicates = DuplicateMode::Reject;
+			else if (!::strcasecmp(optarg, "resume"))
+				optDuplicates = DuplicateMode::Resume;
+			else if (!::strcasecmp(optarg, "replace"))
+				optDuplicates = DuplicateMode::Replace;
+			else {
+				::fprintf(stderr,
+				"invalid mode for duplicate devices\n"
+				"should be 'reject', 'resume' or 'replace'\n");
+				usage_create(stderr, EXIT_FAILURE);
+			}
 			break;
 		 case '?':
 			break;
@@ -441,6 +461,12 @@ cmd_create(int argc, char **argv)
 			::fprintf(stderr, "getopt error\n");
 			return -1;
 		}
+	}
+
+	if (optLegacyMode && no_legacy) {
+		::fprintf(stderr,
+		    "legacy mode does not support the provided parameters\n");
+		return 2;
 	}
 
 	if (::optind != argc) {
@@ -468,14 +494,33 @@ cmd_create(int argc, char **argv)
 			    be16toh(pkt.add_device.dev_info_size);
 			pkt.add_device.dev_name_size =
 			    be16toh(pkt.add_device.dev_name_size);
-			if (devices.find(pkt.add_device.id)
-			    != devices.end())
+
+			if (optDuplicates == DuplicateMode::Replace) {
+				auto dev =
+				    OutDevice::newFromNE2AddCommand(0, pkt);
+				devices[pkt.add_device.id] = move(dev);
+				break;
+			}
+
+			auto old = devices.find(pkt.add_device.id);
+			if (old == devices.end()) {
+				auto dev =
+				    OutDevice::newFromNE2AddCommand(0, pkt);
+				devices[pkt.add_device.id] = move(dev);
+				break;
+			}
+
+			if (optDuplicates == DuplicateMode::Reject)
 				throw MsgException(
 				    "protocol error: duplicate device %u",
 				    pkt.add_device.id);
-			auto dev = OutDevice::newFromNE2AddCommand(0, pkt);
-			devices[pkt.add_device.id] = move(dev);
-			break;
+
+			if (optDuplicates == DuplicateMode::Resume) {
+				OutDevice::skipNE2AddCommand(0, pkt);
+				break;
+			}
+
+			throw Exception("unhandled --duplicates mode");
 		 }
 		 case NE2Command::RemoveDevice:
 		 {

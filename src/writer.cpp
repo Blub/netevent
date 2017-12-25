@@ -269,7 +269,7 @@ OutDevice::newFromNeteventStream(int fd)
 }
 
 uniq<OutDevice>
-OutDevice::newFromNE2AddCommand(int fd, NE2Packet& pkt)
+OutDevice::newFromNE2AddCommand(int fd, NE2Packet& pkt, bool skip)
 {
 	if (pkt.cmd != static_cast<int>(NE2Command::AddDevice))
 		throw Exception("internal error: wrong packet");
@@ -299,6 +299,7 @@ OutDevice::newFromNE2AddCommand(int fd, NE2Packet& pkt)
 	userdev.id.version = be16toh(dev_id.version);
 
 	uniq<OutDevice> dev {
+		skip ? nullptr :
 		new OutDevice(string(userdev.name,
 		              ::strnlen(userdev.name, sizeof(userdev.name))),
 		              userdev.id)
@@ -317,9 +318,11 @@ OutDevice::newFromNE2AddCommand(int fd, NE2Packet& pkt)
 	evbits.resize(EV_MAX);
 	if (!mustRead(fd, evbits.data(), evbits.byte_size()))
 		throw ErrnoException("error reading event bits");
-	for (auto bit : evbits)
-		if (bit)
-			dev->setEventBit(uint16_t(bit.index()));
+	if (dev) {
+		for (auto bit : evbits)
+			if (bit)
+				dev->setEventBit(uint16_t(bit.index()));
+	}
 
 	Bits entrybits;
 	Bits absbits;
@@ -339,11 +342,14 @@ OutDevice::newFromNE2AddCommand(int fd, NE2Packet& pkt)
 			    ev.index());
 
 		auto ioc = kUISetBitIOC[ev.index()];
-		for (auto b : entrybits) {
-			if (b)
-				dev->setGenericBit(ioc, uint16_t(b.index()),
-				    "failed to set %zu bit %zu",
-				    ev.index(), b.index());
+		if (dev) {
+			for (auto b : entrybits) {
+				if (b)
+					dev->setGenericBit(
+					    ioc, uint16_t(b.index()),
+					    "failed to set %zu bit %zu",
+					    ev.index(), b.index());
+			}
 		}
 
 		if (ev.index() == EV_ABS)
@@ -364,6 +370,8 @@ OutDevice::newFromNE2AddCommand(int fd, NE2Packet& pkt)
 		if (!mustRead(fd, &ai, sizeof(ai)))
 			throw ErrnoException(
 			    "failed to read absolute axis %zu", abs.index());
+		if (!dev)
+			continue;
 		struct input_absinfo hostai;
 		hostai.value      = be16toh(ai.value);
 		hostai.minimum    = be16toh(ai.minimum);
@@ -385,9 +393,22 @@ OutDevice::newFromNE2AddCommand(int fd, NE2Packet& pkt)
 		}
 	}
 
-	dev->create();
+	if (dev)
+		dev->create();
 
 	return dev;
+}
+
+void
+OutDevice::skipNE2AddCommand(int fd, NE2Packet& pkt)
+{
+	(void)newFromNE2AddCommand(fd, pkt, true);
+}
+
+uniq<OutDevice>
+OutDevice::newFromNE2AddCommand(int fd, NE2Packet& pkt)
+{
+	return newFromNE2AddCommand(fd, pkt, false);
 }
 
 void

@@ -302,6 +302,7 @@ struct OutDevice {
 
 	static uniq<OutDevice> newFromNeteventStream(int fd);
 	static uniq<OutDevice> newFromNE2AddCommand(int fd, NE2Packet&);
+	static void skipNE2AddCommand(int fd, NE2Packet&);
 
 	int fd() const noexcept {
 		return fd_;
@@ -310,6 +311,7 @@ struct OutDevice {
 	void write(const InputEvent& ev);
 
  private:
+	static uniq<OutDevice> newFromNE2AddCommand(int, NE2Packet&, bool);
 	void assertNotCreated(const char *errmsg) const;
 
 	template<typename T>
