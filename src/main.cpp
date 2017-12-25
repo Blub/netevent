@@ -385,6 +385,7 @@ usage_create [[noreturn]] (FILE *out, int exit_status)
 "  -l, --legacy           run in netevent 1 compatible mode\n"
 "  --no-legacy            run in netevent 2 mode (default)\n"
 "  --duplicates=MODE      how to deal with duplicate devices\n"
+"  --listen=SOCKSPEC      listen on a socket instead of reading from stdin\n"
 "duplicate device modes:\n"
 "  reject                 treat duplicates as errors and exit (default)\n"
 "  resume                 assume the devices are equivalent and resume them\n"
@@ -419,6 +420,8 @@ cmd_create(int argc, char **argv)
 		{ "legacy",         no_argument,       nullptr, 'l' },
 		{ "no-legacy",      no_argument,       nullptr, 0x1000 },
 		{ "duplicates",     required_argument, nullptr, 'd' },
+		{ "listen",         required_argument, nullptr, 0x1001 },
+		{ "on-close",       required_argument, nullptr, 0x1002 },
 		{ nullptr, 0, nullptr, 0 }
 	};
 
@@ -426,6 +429,10 @@ cmd_create(int argc, char **argv)
 	bool optLegacyMode = false;
 	enum class DuplicateMode { Reject, Resume, Replace }
 	optDuplicates = DuplicateMode::Reject;
+	enum class CloseAction { End, Accept }
+	optOnClose = CloseAction::Accept;
+
+	const char *optListen = nullptr;
 
 	int c, optindex = 0;
 	opterr = 1;
@@ -455,6 +462,23 @@ cmd_create(int argc, char **argv)
 				usage_create(stderr, EXIT_FAILURE);
 			}
 			break;
+		 case 0x1001:
+			no_legacy = true;
+			optListen = optarg;
+			break;
+		 case 0x1002:
+			no_legacy = true;
+			if (!::strcasecmp(optarg, "end"))
+				optOnClose = CloseAction::End;
+			else if (!::strcasecmp(optarg, "accept"))
+				optOnClose = CloseAction::Accept;
+			else {
+				::fprintf(stderr,
+				"invalid on-close action\n"
+				"should be 'end' or 'accept'\n");
+				usage_create(stderr, EXIT_FAILURE);
+			}
+			break;
 		 case '?':
 			break;
 		 default:
@@ -479,8 +503,24 @@ cmd_create(int argc, char **argv)
 
 	map<uint16_t, uniq<OutDevice>> devices;
 
+	int infd = 0;
+	Socket serversock;
+	IOHandle inhandle;
+
+	if (optListen) {
+		if (optListen[0] == '@')
+			serversock.listenUnix<true>(optListen+1);
+		else
+			serversock.listenUnix<false>(optListen);
+		inhandle = serversock.accept();
+		infd = inhandle.fd();
+		if (optOnClose == CloseAction::End)
+			serversock.close();
+	}
+
 	NE2Packet pkt = {};
-	while (mustRead(0, &pkt, sizeof(pkt))) {
+ Resume:
+	while (mustRead(infd, &pkt, sizeof(pkt))) {
 		pkt.cmd = be16toh(pkt.cmd);
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wcovered-switch-default"
@@ -497,7 +537,7 @@ cmd_create(int argc, char **argv)
 
 			if (optDuplicates == DuplicateMode::Replace) {
 				auto dev =
-				    OutDevice::newFromNE2AddCommand(0, pkt);
+				    OutDevice::newFromNE2AddCommand(infd, pkt);
 				devices[pkt.add_device.id] = move(dev);
 				break;
 			}
@@ -505,7 +545,7 @@ cmd_create(int argc, char **argv)
 			auto old = devices.find(pkt.add_device.id);
 			if (old == devices.end()) {
 				auto dev =
-				    OutDevice::newFromNE2AddCommand(0, pkt);
+				    OutDevice::newFromNE2AddCommand(infd, pkt);
 				devices[pkt.add_device.id] = move(dev);
 				break;
 			}
@@ -516,7 +556,7 @@ cmd_create(int argc, char **argv)
 				    pkt.add_device.id);
 
 			if (optDuplicates == DuplicateMode::Resume) {
-				OutDevice::skipNE2AddCommand(0, pkt);
+				OutDevice::skipNE2AddCommand(infd, pkt);
 				break;
 			}
 
@@ -552,6 +592,14 @@ cmd_create(int argc, char **argv)
 	}
 	if (errno)
 		throw ErrnoException("read error");
+	// Otherwise we are at EOF, if we're in listen mode, accept another
+	// client.
+	if (serversock) {
+		inhandle.close();
+		inhandle = serversock.accept();
+		infd = inhandle.fd();
+		goto Resume;
+	}
 	return 0;
 }
 

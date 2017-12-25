@@ -58,6 +58,15 @@ All subcommands:
         Since ``resume`` does not verify the device, this is the preferred mode
         if the destination event device node does not need to be persistent.
 
+``--listen=``\ *SOCKETNAME*
+    Rather than reading from stdin, listen on the specified unix (or abstract
+    if prefixed with "@") socket.
+
+``--on-close=end|accept``
+    When using ``--listen``, this option decides how to proceed after a client
+    disconnects. The default is to ``accept`` a new client and resume according
+    to the configured ``--duplicates`` mode. Alternatively ``end`` can be used
+    to cause the main loop to exit successfully.
 
 ``netevent cat`` and ``netevent create``
 ----------------------------------------
