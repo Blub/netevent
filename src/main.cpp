@@ -513,7 +513,7 @@ cmd_create(int argc, char **argv)
 static int
 cmd_command(int argc, char **argv)
 {
-	if (argc != 3) {
+	if (argc < 3) {
 		::fprintf(stderr,
 		          "usage: netevent command SOCKETNAME COMMAND\n");
 		return 2;
@@ -525,9 +525,8 @@ cmd_command(int argc, char **argv)
 		return 3;
 	}
 
-	const char *command = argv[2];
-	auto cmdlen = ::strlen(command);
-	if (!cmdlen) // okay
+	string command = join(' ', argv+2, argv+argc);
+	if (!command.length()) // okay
 		return 0;
 
 	UnixStream sock;
@@ -538,7 +537,7 @@ cmd_command(int argc, char **argv)
 		sock.connect<false>(sockname);
 	}
 
-	if (!mustWrite(sock.fd(), command, cmdlen)) {
+	if (!mustWrite(sock.fd(), command.c_str(), command.length())) {
 		::fprintf(stderr, "failed to send command: %s\n",
 		          ::strerror(errno));
 	}
