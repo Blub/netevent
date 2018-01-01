@@ -76,6 +76,8 @@ Socket::bindUnix(const string& path)
 	auto beg = reinterpret_cast<const uint8_t*>(&addr);
 	auto end = data + path.length();
 
+	if (!Abstract)
+		(void)::unlink(path.c_str());
 	if (::bind(fd_, reinterpret_cast<const struct sockaddr*>(&addr),
 	           Abstract ? socklen_t(end-beg) : socklen_t(sizeof(addr)))
 	    != 0)
