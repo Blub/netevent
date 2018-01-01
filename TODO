@@ -1,7 +1,4 @@
 * Test the code without HAS_UI_DEV_SETUP
-* packaging:
-     debian/ dir: should work on >=jessie and ubuntu >=16.04)
-     archlinux/PKGBUILD
 * Some TODOs found in the code? There should be at least one...
 * a) INotify to listen to devices being created?
   b) Use systemd service files to tell the daemon about new devices?

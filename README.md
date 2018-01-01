@@ -106,7 +106,6 @@ For example via `socat READLINE netevent-command.sock`.
 
 ## Still TODO:
 
-* Arch & Debian packaging files
 * Write an example systemd-user .service file.
 
 ### Use case notes from the author
