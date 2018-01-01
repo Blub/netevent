@@ -1,0 +1,32 @@
+# Add mouse & keyboard
+device add my-mouse /dev/input/by-id/usb-MyCoolMouse-if01-event-mouse
+device add my-kbd /dev/input/by-id/usb-MyCoolKeyboard-event-kbd
+
+# Add my the laptop toutput:
+output add laptop exec:ssh myuser@mylaptop netevent create
+
+# Create local device clones, with recognizable names
+device rename my-mouse vm0-mouse
+device rename my-kbd vm0-kbd
+# Run a 'create' in the background (--daemon) so devices don't vanish if the
+# main daemon is stopped (since qemu's '-object input-linux' won't find it
+# again at runtime automatically, although we could instead send hmp commands
+# to re-add them at startup as an alternative setup)
+# Since we want to be able to reconnect, let it use a socket (--listen=@vm0),
+# tell it to accept new connections after EOF (--on-close=accept) and that new
+# connections should simply resume existing input devices (--duplicates=resume)
+# and finally that it should try to connect to an already existing instance
+# (--connect) before starting a new one.
+output add vm0 exec:netevent create --duplicates=resume --on-close=accept --listen=@vm0 --connect --daemonize
+# Afterwards we can reset the names, but this is optional as it only affects
+# netevent's internal state of the device names used when adding new outputs.
+device reset-name my-mouse
+device reset-name my-kbd
+
+# Add hotkeys to switch between host, laptop and the VM
+hotkey add my-kbd key:188:1 use vm0\; grab on
+hotkey add my-kbd key:188:0 nop
+hotkey add my-kbd key:187:1 use wrytop\; grab on
+hotkey add my-kbd key:187:0 nop
+hotkey add my-kbd key:186:1 grab off
+hotkey add my-kbd key:186:0 nop

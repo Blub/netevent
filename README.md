@@ -46,7 +46,12 @@ Or: as previously, just put the `netevent` binary wherever.
 See the DAEMON COMMANDS section in netevent(1) for details on the commands used
 in the setup scripts below.
 
-### Example 1: sharing keyboard & mouse with a machine via ssh:
+### Examples
+
+See the `examples/` directory. Read the setup-example below to see how to adapt
+the hotkey lines to work with your devices.
+
+#### Simple example setup: sharing keyboard & mouse with a machine via ssh:
 
 Host side:
 
@@ -103,15 +108,3 @@ Host side:
 
 You can now send additional commands to the daemon by connecting to the socket.
 For example via `socat READLINE netevent-command.sock`.
-
-## Still TODO:
-
-* Write an example systemd-user .service file.
-
-### Use case notes from the author
-
-My primary use was sharing keyboard & mouse between desktop and laptop in a
-way which would also work without X11. Other useful use cases are sharing a
-keyboard with your phone, or simply duplicating event devices on one machine
-and passing the extra devices to VMs via qemu's event-device input device
-support.

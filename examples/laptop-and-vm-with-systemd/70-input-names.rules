@@ -1,0 +1,27 @@
+# /etc/udev/rules/70-input-names.rules
+#
+# This file is optional (see start-vm.sh)
+#
+# For event devices with a name matching 'vm*-*' create a symlink in
+# /dev/input/by-name. Also tag them for systemd as /input/by-name/<name> so we
+# can depend on them in systemd service files.
+
+# Filter via goto+labels to avoid huge lines
+KERNEL!="event*", GOTO="input_vm_names_end"
+SUBSYSTEM!="input", GOTO="input_vm_names_end"
+ENV{.INPUT_CLASS}!="?*", GOTO="input_vm_names_end"
+
+# Store name in .INPUT_NAME
+PROGRAM="/bin/cat /sys/class/input/%k/device/name", ENV{.INPUT_NAME}="%c"
+# Filter out by our desired pattern
+ENV{.INPUT_NAME}!="vm*-*", GOTO="input_vm_names_end"
+
+# Add a by-name symlink:
+SYMLINK+="/input/by-name/%c"
+
+# Add a systemd .device service unit:
+TAG+="systemd"
+# Alternatively we can add additional paths for the .device units
+# ENV{SYSTEMD_ALIAS}+="/input/by-name/%E{.INPUT_NAME}"
+
+LABEL="input_vm_names_end"

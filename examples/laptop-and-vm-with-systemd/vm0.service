@@ -1,0 +1,16 @@
+[Unit]
+# Note that you can use %I instead of the fixed VM name '0'.
+Description=VM 0
+After=network.target
+# Also note that these could be added via drop-in vm@name.sevice.d/input.conf
+# files
+Requires=dev-input-by\x2dname-vm0\x2dkbd.device
+Requires=dev-input-by\x2dname-vm0\x2dmouse.device
+
+[Service]
+Type=forking
+ExecStart=/bin/bash /my/vm/vm-start.sh
+ExecStop=/bin/bash /some/stop/qemu/hmp/command
+User=vm-user
+Group=vm-user
+LimitMEMLOCK=infinity
