@@ -598,6 +598,12 @@ cmd_create(int argc, char **argv)
 			serversock.listenUnix<true>(optListen+1);
 		else
 			serversock.listenUnix<false>(optListen);
+	}
+
+	if (optDaemonize)
+		doDaemonize(optListen);
+
+	if (optListen) {
 		if (!inhandle) {
 			inhandle = serversock.accept();
 			infd = inhandle.fd();
@@ -605,9 +611,6 @@ cmd_create(int argc, char **argv)
 		if (optOnClose == CloseAction::End)
 			serversock.close();
 	}
-
-	if (optDaemonize)
-		doDaemonize(optListen);
 
 	NE2Packet pkt = {};
  Resume:
