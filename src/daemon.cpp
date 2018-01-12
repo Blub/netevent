@@ -73,6 +73,20 @@ struct FILEHandle {
 	}
 };
 
+struct HotkeyDef {
+	uint16_t device;
+	uint16_t type;
+	uint16_t code;
+	int32_t value;
+
+	constexpr bool operator<(const HotkeyDef& r) const {
+		return (device < r.device || (device == r.device &&
+		        (type < r.type || (type == r.type &&
+		         (code < r.code || (code == r.code &&
+		          (value < r.value)))))));
+	}
+};
+
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wexit-time-destructors"
 #pragma clang diagnostic ignored "-Wglobal-constructors"
@@ -92,11 +106,7 @@ static struct {
 	string name;
 }                            gCurrentOutput;
 static bool                  gGrab = false;
-using ValueHotkeyMap  = map<int32_t, string>;
-using CodeHotkeyMap   = map<uint16_t, ValueHotkeyMap>;
-//using TypeHotkeyMap   = map<uint16_t, CodeHotkeyMap>;
-using DeviceHotkeyMap = map<uint16_t, CodeHotkeyMap>;
-static DeviceHotkeyMap gHotkeys[EV_CNT];
+static map<HotkeyDef, string> gHotkeys;
 
 static vector<function<void()>> gPreExecStack;
 #pragma clang diagnostic pop
@@ -133,6 +143,7 @@ daemon_preExec()
 	gFDCBs.clear();
 }
 
+#if 0
 template<typename T, typename U>
 static void
 mapRemove(map<T,U>& m, T key)
@@ -141,6 +152,7 @@ mapRemove(map<T,U>& m, T key)
 	if (iter != m.end())
 		m.erase(iter);
 }
+#endif
 
 static void
 removeFD(int fd)
@@ -194,8 +206,12 @@ announceDeviceRemoval(Input& input)
 static void
 cleanupDeviceHotkeys(uint16_t id)
 {
-	for (auto& devmap: gHotkeys)
-		mapRemove(devmap, id);
+	for (auto i = gHotkeys.begin(); i != gHotkeys.end();) {
+		if (i->first.device == id)
+			i = gHotkeys.erase(i);
+		else
+			++i;
+	}
 }
 
 static void
@@ -363,17 +379,11 @@ tryHotkey(uint16_t device, uint16_t type, uint16_t code, int32_t value)
 {
 	if (type >= EV_CNT)
 		return false;
-	DeviceHotkeyMap& devicemap = gHotkeys[type];
-	auto codemap = devicemap.find(device);
-	if (codemap == devicemap.end())
+	HotkeyDef def { device, type, code, value };
+	auto cmd = gHotkeys.find(def);
+	if (cmd == gHotkeys.end())
 		return false;
-	auto valuemap = codemap->second.find(code);
-	if (valuemap == codemap->second.end())
-		return false;
-	auto cmditer = valuemap->second.find(value);
-	if (cmditer == valuemap->second.end())
-		return false;
-	gCommandQueue.emplace_back(Command{-1, cmditer->second});
+	gCommandQueue.emplace_back(Command{-1, cmd->second});
 	return true;
 }
 
@@ -680,16 +690,9 @@ addHotkey(uint16_t device, uint16_t type, uint16_t code, int32_t value,
 {
 	if (type >= EV_CNT)
 		throw MsgException("unknown event type: %u", type);
-	DeviceHotkeyMap& devicemap = gHotkeys[type];
-	auto codemap = devicemap.find(device);
-	if (codemap == devicemap.end())
-		codemap = devicemap.emplace(device, CodeHotkeyMap{})
-		    .first;
-	auto valuemap = codemap->second.find(code);
-	if (valuemap == codemap->second.end())
-		valuemap = codemap->second.emplace(code, ValueHotkeyMap{})
-		    .first;
-	valuemap->second[value] = move(command);
+
+
+	gHotkeys[HotkeyDef{device, type, code, value}] = move(command);
 }
 
 static void
@@ -697,14 +700,7 @@ removeHotkey(uint16_t device, uint16_t type, uint16_t code, int32_t value)
 {
 	if (type >= EV_CNT)
 		throw MsgException("unknown event type: %u", type);
-	DeviceHotkeyMap& devicemap = gHotkeys[type];
-	auto codemap = devicemap.find(device);
-	if (codemap == devicemap.end())
-		return;
-	auto valuemap = codemap->second.find(code);
-	if (valuemap == codemap->second.end())
-		return;
-	mapRemove(valuemap->second, value);
+	gHotkeys.erase(HotkeyDef{device, type, code, value});
 }
 
 static void
@@ -977,24 +973,13 @@ clientCommand_Info(int clientfd, const vector<string>& args)
 	         gCurrentOutput.fd, gCurrentOutput.name.c_str());
 
 	toClient(clientfd, "Hotkeys:\n");
-	unsigned int evtype = 0;
-	for (auto& di: gHotkeys) {
-		for (auto& ci: di) {
-			auto device = ci.first;
-			for (auto& vi: ci.second) {
-				auto code = vi.first;
-				for (auto& v: vi.second) {
-					auto value = v.first;
-					toClient(clientfd,
-					         "    %u: %s:%u:%i => %s\n",
-					         device,
-					         EV2String(evtype),
-					         code, value,
-					         v.second.c_str());
-				}
-			}
-		}
-		++evtype;
+	for (const auto& hi: gHotkeys) {
+		toClient(clientfd, "    %u: %s:%u:%i => %s\n",
+		         hi.first.device,
+		         EV2String(hi.first.type),
+		         hi.first.code,
+		         hi.first.value,
+		         hi.second.c_str());
 	}
 }
 
