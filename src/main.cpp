@@ -562,7 +562,7 @@ cmd_create(int argc, char **argv)
 			else
 				serversock.connectUnix<false>(optListen);
 			outhandle = serversock.release();
-		} catch (ErrnoException& ex) {
+		} catch (const ErrnoException& ex) {
 			if (!optDaemonize || ex.error() != ECONNREFUSED)
 				throw;
 		}
@@ -777,10 +777,10 @@ main(int argc, char **argv)
 			return cmd_daemon(argc-1, argv+1);
 		if (!::strcmp(argv[1], "command"))
 			return cmd_command(argc-1, argv+1);
-	} catch (Exception& ex) {
+	} catch (const Exception& ex) {
 		::fprintf(stderr, "error: %s\n", ex.what());
 		return 2;
-	} catch (std::exception& ex) {
+	} catch (const std::exception& ex) {
 		::fprintf(stderr, "unhandled error: %s\n", ex.what());
 		return 2;
 	}

@@ -411,7 +411,7 @@ readFromDevice(InDevice *device, uint16_t id)
 	try {
 		if (!device->read(&pkt.event.event))
 			return closeDevice(device);
-	} catch (Exception& ex) {
+	} catch (const Exception& ex) {
 		::fprintf(stderr, "error reading device: %s\n", ex.what());
 		return closeDevice(device);
 	}
@@ -447,7 +447,7 @@ announceDevice(Input& input, int fd)
 	try {
 		input.device_->writeNE2AddDevice(fd, input.id_);
 		return true;
-	} catch (Exception& ex) {
+	} catch (const Exception& ex) {
 		::fprintf(stderr,
 			  "error creating device on output, dropping: %s\n",
 			  ex.what());
@@ -494,7 +494,7 @@ addDevice(const string& name, const char *path)
 			[=]() { finishDeviceRemoval(weakdevptr); },
 		};
 		gInputs.emplace(name, move(input));
-	} catch (std::exception&) {
+	} catch (const std::exception&) {
 		freeInputID(id);
 		throw;
 	}
@@ -1102,7 +1102,7 @@ processCommandQueue()
 			parseClientCommand(command.client_,
 			                   command.command_.c_str(),
 			                   command.command_.length());
-		} catch (Exception& ex) {
+		} catch (const Exception& ex) {
 			toClient(command.client_,
 			        "ERROR: %s\n", ex.what());
 		}
