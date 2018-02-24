@@ -79,8 +79,23 @@ InDevice::~InDevice()
 void
 InDevice::grab(bool on)
 {
-	ctl<int>(EVIOCGRAB, on ? 1 : 0,
-	    "failed to %s input device", on ? "grab" : "release");
+	int data = on ? 1 : 0;
+	int rc = ::ioctl(fd_, EVIOCGRAB, data);
+	if (rc == 0) {
+		grabbing_ = on;
+		return;
+	}
+	if (on == grabbing_) {
+		// we wouldn't have caused a change, so we expect errors:
+		if ( (on  && errno == EBUSY) ||
+		     (!on && errno == EINVAL) )
+		{
+			return;
+		}
+	}
+	throw ErrnoException(
+	    on ? "failed to grab input device"
+	       : "failed to release input device");
 }
 
 bool
