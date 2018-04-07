@@ -30,8 +30,10 @@ logmsg() {
 logrun() {
   echo "$@" >&4
   "$@" >&4 2>&4
+  logrun_res="$?"
   echo "---" >&4
   echo >&4
+  return "$logrun_res"
 }
 
 for opt; do
