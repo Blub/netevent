@@ -69,6 +69,7 @@ OutDevice::OutDevice(const string& name, struct input_id id)
 	// Being explicit here: we currently don't support force feedback.
 	// (I have no way to test it, and don't want to)
 	user_dev_.ff_effects_max = 0;
+#ifdef HAS_UI_DEV_SETUP
 	if (!gUse_UI_DEV_SETUP)
 		return;
 	struct uinput_setup setup;
@@ -85,6 +86,7 @@ OutDevice::OutDevice(const string& name, struct input_id id)
 	} else {
 		throw ErrnoException("failed to setup uinput device");
 	}
+#endif
 }
 
 void
@@ -138,15 +140,17 @@ void
 OutDevice::setupAbsoluteAxis(uint16_t code, const struct input_absinfo& info)
 {
 	assertNotCreated("trying to set absolute axis");
+#ifdef HAS_UI_DEV_SETUP
 	if (gUse_UI_DEV_SETUP) {
 		struct uinput_abs_setup data = { code, info };
 		ctl(UI_ABS_SETUP, &data, "failed to setup device axis information");
-	} else {
-		user_dev_.absmax[code] = info.maximum;
-		user_dev_.absmin[code] = info.minimum;
-		user_dev_.absfuzz[code] = info.fuzz;
-		user_dev_.absflat[code] = info.flat;
+		return;
 	}
+#endif
+	user_dev_.absmax[code] = info.maximum;
+	user_dev_.absmin[code] = info.minimum;
+	user_dev_.absfuzz[code] = info.fuzz;
+	user_dev_.absflat[code] = info.flat;
 }
 
 void
