@@ -230,8 +230,9 @@ checkHello(NE2Packet& pkt)
 		throw MsgException(
 		    "protocol error: got %u instead of %u (Hello)\n",
 		    unsigned(pkt.cmd), unsigned(NE2Command::Hello));
-	if (::memcmp(pkt.hello.magic, kNE2Hello, sizeof(pkt.hello.magic)) != 0)
+	if (::memcmp(pkt.hello.magic, kNE2Hello, sizeof(pkt.hello.magic)) != 0) {
 		throw MsgException("protocol error: bad hello packet magic");
+	}
 	pkt.hello.version = be16toh(pkt.hello.version);
 	if (pkt.hello.version != kNE2Version)
 		throw MsgException(

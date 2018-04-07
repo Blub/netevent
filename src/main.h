@@ -38,6 +38,8 @@
 
 #include "../config.h"
 
+#define Packed __attribute__((packed))
+
 using std::string;
 using std::move;
 template<typename T, typename Deleter = std::default_delete<T>>
@@ -74,7 +76,7 @@ struct InputEvent {
 		code    = htobe16(code);
 		value   = static_cast<int32_t>(htobe32(value));
 	}
-};
+} Packed;
 
 static const char kNE2Hello[8] = { 'N', 'E', '2', 'H',
                                    'e', 'l', 'l', 'o', };
@@ -89,30 +91,34 @@ enum class NE2Command : uint16_t {
 };
 
 struct NE2Packet {
-	uint16_t cmd;
 	// -Wnested-anon-types
 	struct Event {
+		uint16_t cmd;
 		uint16_t id;
 		InputEvent event;
-	};
+	} Packed;
 	struct AddDevice {
+		uint16_t cmd;
 		uint16_t id;
 		uint16_t dev_info_size;
 		uint16_t dev_name_size;
-	};
+	} Packed;
 	struct RemoveDevice {
+		uint16_t cmd;
 		uint16_t id;
-	};
+	} Packed;
 	struct Hello {
-		char magic[8];
+		uint16_t cmd;
 		uint16_t version;
-	};
+		char magic[8];
+	} Packed;
 	union {
+		uint16_t cmd;
 		Event event;
 		AddDevice add_device;
 		RemoveDevice remove_device;
 		Hello hello;
-	};
+	} Packed;
 };
 
 void writeHello(int fd);
