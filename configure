@@ -58,6 +58,15 @@ DATAROOTDIR="${DATAROOTDIR:-${PREFIX}/share}"
 MANDIR="${MANDIR:-${DATAROOTDIR}/man}"
 MAN1DIR="${MAN1DIR:-${MANDIR}/man1}"
 
+isautoyes() {
+  case "$1" in
+    auto|[Yy][Ee][Ss]|1|[Oo][Nn]|[Tt][Rr][Uu][Ee])
+      return 0 ;;
+    *)
+      return 1 ;;
+  esac
+}
+
 if test -z "$CXX"; then
   if which clang++ >/dev/null 2>&1; then
     CXX=clang++
@@ -71,24 +80,21 @@ if test -z "$CXX"; then
 fi
 
 echo -n 'Checking for rst2man...'
-case "$enable_doc" in
-  auto|[Yy][Ee][Ss]|1|[Oo][Nn]|[Tt][Rr][Uu][Ee])
-    ENABLE_DOC=y
-    RST2MAN="$(which rst2man 2>/dev/null)"
-    if [ $? -ne 0 ]; then
-      ENABLE_DOC=
-      RST2MAN=
-      if [ "x$enable_doc" != "xauto" ]; then
-        echo "failed to find rst2man" >&2
-        exit 1
-      fi
-    fi
-    ;;
-  *)
+if isautoyes "$enable_doc"; then
+  ENABLE_DOC=y
+  RST2MAN="$(which rst2man 2>/dev/null)"
+  if [ $? -ne 0 ]; then
     ENABLE_DOC=
     RST2MAN=
-    ;;
-esac
+    if [ "x$enable_doc" != "xauto" ]; then
+      echo "failed to find rst2man" >&2
+      exit 1
+    fi
+  fi
+else
+  ENABLE_DOC=
+  RST2MAN=
+fi
 if [ "x$ENABLE_DOC" = x ]; then
   echo 'no, disabling documentation building'
 else
