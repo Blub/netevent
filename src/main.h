@@ -47,6 +47,7 @@ using std::function;
 int cmd_daemon(int argc, char **argv);
 
 // C++ doesn't have designated initializers so this is filled in main()
+extern bool gUse_UI_DEV_SETUP;
 extern unsigned long kUISetBitIOC[EV_MAX];
 
 // "Internal" input event, equal to the usual 64 bit struct input_event

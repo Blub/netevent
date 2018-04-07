@@ -19,6 +19,12 @@
 #include <stdarg.h>
 #include "main.h"
 
+#ifdef HAS_UI_DEV_SETUP
+bool gUse_UI_DEV_SETUP = true;
+#else
+bool gUse_UI_DEV_SETUP = false;
+#endif
+
 static const char*const (gDevicePaths[]) = {
 	"/dev/uinput",
 	"/dev/input/uinput",
@@ -63,14 +69,22 @@ OutDevice::OutDevice(const string& name, struct input_id id)
 	// Being explicit here: we currently don't support force feedback.
 	// (I have no way to test it, and don't want to)
 	user_dev_.ff_effects_max = 0;
-#ifdef HAS_UI_DEV_SETUP
+	if (!gUse_UI_DEV_SETUP)
+		return;
 	struct uinput_setup setup;
 	::memset(&setup, 0, sizeof(setup));
 	::memcpy(&setup.id, &user_dev_.id, sizeof(user_dev_.id));
 	::memcpy(setup.name, name.c_str(), name.length());
 	setup.ff_effects_max = user_dev_.ff_effects_max;
-	ctl(UI_DEV_SETUP, &setup, "failed to setup uinput device");
-#endif
+	if (::ioctl(fd_, UI_DEV_SETUP, &setup) == 0)
+		return;
+	if (errno == EINVAL) {
+		// Deal with the case where we're compiled with newer headers
+		// while running with an older kernel.
+		gUse_UI_DEV_SETUP = false;
+	} else {
+		throw ErrnoException("failed to setup uinput device");
+	}
 }
 
 void
@@ -124,26 +138,25 @@ void
 OutDevice::setupAbsoluteAxis(uint16_t code, const struct input_absinfo& info)
 {
 	assertNotCreated("trying to set absolute axis");
-#ifdef HAS_UI_DEV_SETUP
-	struct uinput_abs_setup data = { code, info };
-	ctl(UI_ABS_SETUP, &data, "failed to setup device axis information");
-#else
-	user_dev_.absmax[code] = info.maximum;
-	user_dev_.absmin[code] = info.minimum;
-	user_dev_.absfuzz[code] = info.fuzz;
-	user_dev_.absflat[code] = info.flat;
-#endif
+	if (gUse_UI_DEV_SETUP) {
+		struct uinput_abs_setup data = { code, info };
+		ctl(UI_ABS_SETUP, &data, "failed to setup device axis information");
+	} else {
+		user_dev_.absmax[code] = info.maximum;
+		user_dev_.absmin[code] = info.minimum;
+		user_dev_.absfuzz[code] = info.fuzz;
+		user_dev_.absflat[code] = info.flat;
+	}
 }
 
 void
 OutDevice::create()
 {
-#ifdef HAS_UI_DEV_SETUP
-	// nothing to do here
-#else
-	if (::write(fd_, &user_dev_, sizeof(user_dev_)) != sizeof(user_dev_))
+	if (! gUse_UI_DEV_SETUP &&
+	    ::write(fd_, &user_dev_, sizeof(user_dev_)) != sizeof(user_dev_))
+	{
 		throw ErrnoException("failed to upload device info");
-#endif
+	}
 	if (::ioctl(fd_, UI_DEV_CREATE) == -1)
 		throw ErrnoException("failed to create device");
 	created_ = true;
