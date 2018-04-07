@@ -22,6 +22,18 @@ die() {
   exit 1
 }
 
+logmsg() {
+  echo "$@"
+  echo "$@" >&4
+}
+
+logrun() {
+  echo "$@" >&4
+  "$@" >&4 2>&4
+  echo "---" >&4
+  echo >&4
+}
+
 for opt; do
   case "$opt" in
     -h|--h|--help) help; exit 0 ;;
@@ -36,6 +48,9 @@ for opt; do
     *) die "Unknown option: $opt" ;;
   esac
 done
+
+rm -f config.log
+exec 4>config.log
 
 PREFIX="${PREFIX:-/usr/local}"
 BINDIR="${BINDIR:-${PREFIX}/bin}"
@@ -82,7 +97,7 @@ fi
 
 trycc() {
   echo "$1" >.cfgtest.cpp
-  $CXX $CPPFLAGS $CXXFLAGS -c -o .cfgtest.o .cfgtest.cpp
+  logrun $CXX $CPPFLAGS $CXXFLAGS -c -o .cfgtest.o .cfgtest.cpp
   try_compile_result="$?"
   rm -f .cfgtest.o .cfgtest.cpp
   return $try_compile_result
