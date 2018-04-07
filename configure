@@ -17,6 +17,11 @@ options:
 EOF
 }
 
+die() {
+  echo "$@" >&2
+  exit 1
+}
+
 for opt; do
   case "$opt" in
     -h|--h|--help) help; exit 0 ;;
@@ -28,6 +33,7 @@ for opt; do
     --enable-doc=*) enable_doc="${doc#--enable-doc=}" ;;
     --enable-doc)   enable_doc=yes ;;
     --disable-doc)  enable_doc=no ;;
+    *) die "Unknown option: $opt" ;;
   esac
 done
 
