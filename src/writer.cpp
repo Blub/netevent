@@ -290,7 +290,7 @@ OutDevice::newFromNE2AddCommand(int fd, NE2Packet& pkt, bool skip)
 	struct uinput_user_dev userdev;
 	if (pkt.add_device.dev_info_size != sizeof(userdev))
 		throw DeviceException(
-		    "protocol error: struct user_input_dev size mismatch");
+		    "protocol error: struct uinput_user_dev size mismatch");
 	if (pkt.add_device.dev_name_size != sizeof(userdev.name))
 		throw DeviceException(
 		    "protocol error: struct input device name size mismatch");
