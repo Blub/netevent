@@ -76,11 +76,16 @@ struct InputEvent {
 	}
 };
 
+static const char kNE2Hello[8] = { 'N', 'E', '2', 'H',
+                                   'e', 'l', 'l', 'o', };
+static const uint16_t kNE2Version = 2;
+
 enum class NE2Command : uint16_t {
 	KeepAlive    = 0,
 	AddDevice    = 1,
 	RemoveDevice = 2,
 	DeviceEvent  = 3,
+	Hello        = 4,
 };
 
 struct NE2Packet {
@@ -98,12 +103,19 @@ struct NE2Packet {
 	struct RemoveDevice {
 		uint16_t id;
 	};
+	struct Hello {
+		char magic[8];
+		uint16_t version;
+	};
 	union {
 		Event event;
 		AddDevice add_device;
 		RemoveDevice remove_device;
+		Hello hello;
 	};
 };
+
+void writeHello(int fd);
 
 unsigned int String2EV(const char* name, size_t length);
 

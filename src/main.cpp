@@ -83,7 +83,7 @@ usage [[noreturn]] (FILE *out, int exit_status)
 "usage: netevent <command>\n"
 "commands:\n"
 "  show DEVICE [COUNT]     show up to COUNT input events of DEVICE\n"
-"  cat [OPTIONS] DEVICE    dump in netevent 1 comaptible way\n"
+"  cat [OPTIONS] DEVICE    dump device in netevent 1 or 2 comaptible way\n"
 "  create [OPTIONS]        create a device\n"
 "  daemon [OPTIONS] SOCK   run a device daemon\n"
 "  command SOCK <command>  send a runtime command to a daemon\n"
@@ -209,6 +209,44 @@ String2EV(const char* text, size_t length)
 	if (parseULong(&num, text, length))
 		return unsigned(num);
 	return unsigned(-1);
+}
+
+void
+writeHello(int fd)
+{
+	NE2Packet pkt = {};
+	::memset(&pkt, 0, sizeof(pkt));
+	pkt.cmd = htobe16(uint16_t(NE2Command::Hello));
+	::memcpy(pkt.hello.magic, kNE2Hello, sizeof(pkt.hello.magic));
+	pkt.hello.version = htobe16(kNE2Version);
+	if (!mustWrite(fd, &pkt, sizeof(pkt)))
+		throw ErrnoException("failed to write hello packet");
+}
+
+static void
+checkHello(NE2Packet& pkt)
+{
+	if (pkt.cmd != uint16_t(NE2Command::Hello))
+		throw MsgException(
+		    "protocol error: got %u instead of %u (Hello)\n",
+		    unsigned(pkt.cmd), unsigned(NE2Command::Hello));
+	if (::memcmp(pkt.hello.magic, kNE2Hello, sizeof(pkt.hello.magic)) != 0)
+		throw MsgException("protocol error: bad hello packet magic");
+	pkt.hello.version = be16toh(pkt.hello.version);
+	if (pkt.hello.version != kNE2Version)
+		throw MsgException(
+		    "protocol version mismatch: got %u, expected %u\n",
+		    pkt.hello.version, kNE2Version);
+}
+
+static void
+readHello(int fd)
+{
+	NE2Packet pkt = {};
+	if (!mustRead(fd, &pkt, sizeof(pkt)))
+		throw ErrnoException("error while expecting hello packet");
+	pkt.cmd = htobe16(pkt.cmd);
+	checkHello(pkt);
 }
 
 static void
@@ -358,11 +396,12 @@ cmd_cat(int argc, char **argv)
 		while (dev.read(&ev)) {
 			if (!mustWrite(1, &ev, sizeof(ev))) {
 				::fprintf(stderr, "write failed: %s\n",
-					  ::strerror(errno));
+				          ::strerror(errno));
 				return 2;
 			}
 		}
 	} else {
+		writeHello(1);
 		dev.writeNE2AddDevice(1, 0);
 		NE2Packet pkt = {};
 		pkt.cmd = htobe16(uint16_t(NE2Command::DeviceEvent));
@@ -371,7 +410,7 @@ cmd_cat(int argc, char **argv)
 			pkt.event.event.toNet();
 			if (!mustWrite(1, &pkt, sizeof(pkt))) {
 				::fprintf(stderr, "write failed: %s\n",
-					  ::strerror(errno));
+				          ::strerror(errno));
 				return 2;
 			}
 		}
@@ -612,6 +651,7 @@ cmd_create(int argc, char **argv)
 			serversock.close();
 	}
 
+	readHello(infd);
 	NE2Packet pkt = {};
  Resume:
 	while (mustRead(infd, &pkt, sizeof(pkt))) {
@@ -619,6 +659,9 @@ cmd_create(int argc, char **argv)
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wcovered-switch-default"
 		switch (static_cast<NE2Command>(pkt.cmd)) {
+		 case NE2Command::Hello:
+			checkHello(pkt);
+			break;
 		 case NE2Command::KeepAlive:
 			break;
 		 case NE2Command::AddDevice:

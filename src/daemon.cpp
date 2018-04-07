@@ -543,6 +543,7 @@ static void
 addOutput_Finish(const string& name, IOHandle handle, bool skip_announce)
 {
 	int fd = handle.fd();
+	writeHello(fd);
 	if (!skip_announce)
 		announceAllDevices(fd);
 	gOutputs.emplace(name, move(handle));
