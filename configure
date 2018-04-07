@@ -112,6 +112,7 @@ trycc() {
 UI_DEV_CKPROG="#include <sys/ioctl.h>
 #include <linux/uinput.h>
 int main() {
+  struct uinput_setup setup;
   ioctl(0, UI_DEV_SETUP);
   ioctl(0, UI_ABS_SETUP);
   return 0;
