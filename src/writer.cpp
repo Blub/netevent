@@ -390,12 +390,12 @@ OutDevice::newFromNE2AddCommand(int fd, NE2Packet& pkt, bool skip)
 		if (!dev)
 			continue;
 		struct input_absinfo hostai;
-		hostai.value      = be16toh(ai.value);
-		hostai.minimum    = be16toh(ai.minimum);
-		hostai.maximum    = be16toh(ai.maximum);
-		hostai.fuzz       = be16toh(ai.fuzz);
-		hostai.flat       = be16toh(ai.flat);
-		hostai.resolution = be16toh(ai.resolution);
+		hostai.value      = int32_t(be32toh(ai.value));
+		hostai.minimum    = int32_t(be32toh(ai.minimum));
+		hostai.maximum    = int32_t(be32toh(ai.maximum));
+		hostai.fuzz       = int32_t(be32toh(ai.fuzz));
+		hostai.flat       = int32_t(be32toh(ai.flat));
+		hostai.resolution = int32_t(be32toh(ai.resolution));
 		dev->setupAbsoluteAxis(uint16_t(abs.index()), hostai);
 	}
 
