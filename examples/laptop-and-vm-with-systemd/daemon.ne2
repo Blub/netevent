@@ -26,7 +26,7 @@ device reset-name my-kbd
 # Add hotkeys to switch between host, laptop and the VM
 hotkey add my-kbd key:188:1 use vm0\; grab on
 hotkey add my-kbd key:188:0 nop
-hotkey add my-kbd key:187:1 use wrytop\; grab on
+hotkey add my-kbd key:187:1 use laptop\; grab on
 hotkey add my-kbd key:187:0 nop
 hotkey add my-kbd key:186:1 grab off
 hotkey add my-kbd key:186:0 nop
