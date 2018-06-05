@@ -25,7 +25,7 @@ bool gUse_UI_DEV_SETUP = true;
 bool gUse_UI_DEV_SETUP = false;
 #endif
 
-static const char*const (gDevicePaths[]) = {
+static const char*const gDevicePaths[] = {
 	"/dev/uinput",
 	"/dev/input/uinput",
 	"/dev/misc/uinput",

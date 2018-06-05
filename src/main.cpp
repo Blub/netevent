@@ -215,7 +215,7 @@ void
 writeHello(int fd)
 {
 	NE2Packet pkt = {};
-	::memset(&pkt, 0, sizeof(pkt));
+	::memset((void *) &pkt, 0, sizeof(pkt));
 	pkt.cmd = htobe16(uint16_t(NE2Command::Hello));
 	::memcpy(pkt.hello.magic, kNE2Hello, sizeof(pkt.hello.magic));
 	pkt.hello.version = htobe16(kNE2Version);

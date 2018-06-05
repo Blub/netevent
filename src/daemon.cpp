@@ -195,7 +195,7 @@ static void
 announceDeviceRemoval(Input& input)
 {
 	NE2Packet pkt = {};
-	::memset(&pkt, 0, sizeof(pkt));
+	::memset((void *) &pkt, 0, sizeof(pkt));
 	pkt.cmd = htobe16(uint16_t(NE2Command::RemoveDevice));
 	pkt.remove_device.id = htobe16(input.id_);
 
@@ -264,7 +264,7 @@ readCommand(FILE *file)
 		disconnectClient(::fileno(file));
 		return;
 	}
-	
+
 	int fd = ::fileno(file);
 	gCommandQueue.emplace_back(Command{fd, string{line}});
 }
