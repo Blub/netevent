@@ -18,7 +18,8 @@ ifeq ($(CXX), clang++)
 CPPFLAGS += -Weverything \
             -Wno-c++98-compat \
             -Wno-c++98-compat-pedantic \
-            -Wno-padded
+            -Wno-padded \
+            -Wno-packed
 endif
 
 LDFLAGS ?= -g
