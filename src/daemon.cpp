@@ -1014,9 +1014,9 @@ clientCommand(int clientfd, const vector<string>& args)
 		//         gCurrentOutput.name.c_str());
 	}
 	else if (args[0] == "exec") {
-		if (args.size() <= 2)
+		if (args.size() < 2)
 			throw Exception("'exec' requires 1 parameter");
-		string cmd = join(' ', args.begin()+3, args.end());
+		string cmd = join(' ', args.begin()+1, args.end());
 		shellCommand(cmd.c_str());
 	}
 	else if (args[0] == "source") {
