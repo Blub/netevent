@@ -32,6 +32,9 @@ using std::map;
 
 #include "main.h"
 
+#define OUTPUT_CHANGED_EVENT "output-changed"
+#define GRAB_CHANGED_EVENT   "grab-changed"
+
 static void
 usage_daemon [[noreturn]] (FILE *out, int exit_status)
 {
@@ -108,6 +111,7 @@ static struct {
 }                            gCurrentOutput;
 static bool                  gGrab = false;
 static map<HotkeyDef, string> gHotkeys;
+static map<string, string>   gEventCommands;
 
 static vector<function<void()>> gPreExecStack;
 #pragma clang diagnostic pop
@@ -122,6 +126,8 @@ vectorRemove(vector<T>& vec, T&& value)
 		vec.erase(iter);
 }
 #endif
+
+static void parseClientCommand(int clientfd, const char *cmd, size_t length);
 
 static ScopeGuard
 preExec(function<void()> func)
@@ -373,6 +379,16 @@ finishDeviceRemoval(InDevice *device)
 }
 
 static void
+fireEvent(int clientfd, const char *event)
+{
+	auto iter = gEventCommands.find(event);
+	if (iter == gEventCommands.end())
+		return;
+	auto& cmd = iter->second;
+	parseClientCommand(clientfd, cmd.c_str(), cmd.length());
+}
+
+static void
 setEnvVar(const char *name, const char *value)
 {
 	if (::setenv(name, value, 1) != 0) {
@@ -392,6 +408,7 @@ useOutput(int clientfd, const string& name)
 	gCurrentOutput.name = name;
 
 	setEnvVar("NETEVENT_OUTPUT_NAME", name.c_str());
+	fireEvent(clientfd, OUTPUT_CHANGED_EVENT);
 }
 
 static bool
@@ -408,12 +425,13 @@ tryHotkey(uint16_t device, uint16_t type, uint16_t code, int32_t value)
 }
 
 static void
-grab(bool on)
+grab(int clientfd, bool on)
 {
 	gGrab = on;
 	setEnvVar("NETEVENT_GRABBING", on ? "1" : "0");
 	for (auto& i: gInputs)
 		i.second.device_->grab(on);
+	fireEvent(clientfd, GRAB_CHANGED_EVENT);
 }
 
 static void
@@ -422,7 +440,7 @@ lostCurrentOutput()
 	gCurrentOutput.fd = -1;
 	gCurrentOutput.name = "<none>";
 	if (gGrab)
-		grab(false);
+		grab(-1, false);
 }
 
 static void
@@ -681,7 +699,7 @@ addOutput(int clientfd, const vector<string>& args)
 }
 
 static void
-grabCommand(const char *state)
+grabCommand(int clientfd, const char *state)
 {
 	if (!::strcasecmp(state, "1") ||
 	    !::strcasecmp(state, "on") ||
@@ -703,7 +721,7 @@ grabCommand(const char *state)
 	}
 	else
 		throw MsgException("unknown grab state: %s", state);
-	grab(gGrab);
+	grab(clientfd, gGrab);
 }
 
 static void
@@ -859,7 +877,7 @@ clientCommand_Output(int clientfd, const vector<string>& args)
 		if (args.size() != 3)
 			throw Exception(
 			    "'output use' requires a name");
-		useOutput(args[2]);
+		useOutput(clientfd, args[2]);
 		toClient(clientfd, "output = %s\n",
 		         gCurrentOutput.name.c_str());
 	}
@@ -1005,6 +1023,44 @@ clientCommand_Info(int clientfd, const vector<string>& args)
 	}
 }
 
+static void
+clientCommand_Action(int clientfd, const vector<string>& args)
+{
+	if (args.size() < 2)
+		throw Exception("'action': missing subcommand");
+	const string& cmd = args[1];
+
+	if (args.size() < 3)
+		throw Exception("'action': missing action");
+	const string& action = args[2];
+
+	if (cmd == "remove") {
+		if (args.size() != 3)
+			throw Exception("'action': excess parameters");
+		auto iter = gEventCommands.find(action);
+		if (iter == gEventCommands.end())
+			return;
+		gEventCommands.erase(iter);
+		toClient(clientfd, "removed on-'%s' command\n", action.c_str());
+	}
+	else if (cmd == "set") {
+		if (args.size() < 4)
+			throw Exception("'action': missing command");
+		string cmdstring = join(' ', args.begin()+3, args.end());
+		auto iter = gEventCommands.find(action);
+		if (iter != gEventCommands.end())
+			toClient(clientfd, "replaced on-'%s' command\n",
+			         action.c_str());
+		else
+			toClient(clientfd, "added on-'%s' command\n",
+			         action.c_str());
+		gEventCommands[action] = move(cmdstring);
+	}
+	else
+		throw MsgException("'action': unknown subcommand: %s",
+		                   cmd.c_str());
+}
+
 static void sourceCommandFile(int clientfd, const char *path);
 static void
 clientCommand(int clientfd, const vector<string>& args)
@@ -1019,18 +1075,20 @@ clientCommand(int clientfd, const vector<string>& args)
 		clientCommand_Output(clientfd, args);
 	else if (args[0] == "hotkey")
 		clientCommand_Hotkey(clientfd, args);
+	else if (args[0] == "action")
+		clientCommand_Action(clientfd, args);
 	else if (args[0] == "info")
 		clientCommand_Info(clientfd, args);
 	else if (args[0] == "grab") {
 		if (args.size() != 2)
 			throw Exception("'grab' requires 1 parameter");
-		grabCommand(args[1].c_str());
+		grabCommand(clientfd, args[1].c_str());
 		//toClient(clientfd, "grab = %u\n", gGrab ? 1 : 0);
 	}
 	else if (args[0] == "use") {
 		if (args.size() != 2)
 			throw Exception("'use' requires 1 parameter");
-		useOutput(args[1]);
+		useOutput(clientfd, args[1]);
 		//toClient(clientfd, "output = %s\n",
 		//         gCurrentOutput.name.c_str());
 	}

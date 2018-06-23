@@ -109,6 +109,26 @@ All subcommands:
 DAEMON COMMANDS
 ===============
 
+``action set`` *EVENT* *COMMAND*
+    Queue a command when an event occurs. The command can contain semicolons
+    to execute multiple commands. Multiple parameters will be concatenated with
+    a space.
+
+    The following events currently exist:
+
+    * ``output-changed``
+        Executed on a ``use`` command or when an output device fails and a
+        fallback is being activated.
+    * ``grab-changed``
+        Executed whenever the ``grab`` command is used.
+
+    These commands are executed immediately after such an event has occurred.
+    Note that there's nothing preventing you from building an endless loop by
+    adding event-triggering commands in this place, so, just don't.
+
+``action remove`` *EVENT*
+    Remove a command bound to an event.
+
 ``nop``
     Nothing. Bind as hotkey to ignore an event and be explicit about it.
 
