@@ -1021,6 +1021,12 @@ clientCommand_Info(int clientfd, const vector<string>& args)
 		         hi.first.value,
 		         hi.second.c_str());
 	}
+	toClient(clientfd, "Event actions:\n");
+	for (const auto& i: gEventCommands) {
+		toClient(clientfd, "    '%s': %s\n",
+		         i.first.c_str(),
+		         i.second.c_str());
+	}
 }
 
 static void
