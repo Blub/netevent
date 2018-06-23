@@ -245,6 +245,13 @@ finishClientRemoval(int fd) {
 }
 
 static void
+queueCommand(int clientfd, string line)
+{
+	gCommandQueue.emplace_back(Command{clientfd, move(line)});
+}
+
+
+static void
 readCommand(FILE *file)
 {
 	char *line = nullptr;
@@ -266,7 +273,7 @@ readCommand(FILE *file)
 	}
 	
 	int fd = ::fileno(file);
-	gCommandQueue.emplace_back(Command{fd, string{line}});
+	queueCommand(fd, line);
 }
 
 static void
@@ -383,7 +390,7 @@ tryHotkey(uint16_t device, uint16_t type, uint16_t code, int32_t value)
 	auto cmd = gHotkeys.find(def);
 	if (cmd == gHotkeys.end())
 		return false;
-	gCommandQueue.emplace_back(Command{-1, cmd->second});
+	queueCommand(-1, cmd->second);
 	return true;
 }
 
