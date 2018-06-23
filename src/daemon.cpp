@@ -1347,6 +1347,10 @@ cmd_daemon(int argc, char **argv)
 		    pfds.end());
 		processRemoveQueue();
 
+		// after processing commands, we may want to quit:
+		if (gQuit)
+			break;
+
 		auto got = ::poll(pfds.data(), pfds.size(), -1);
 		if (got == -1) {
 			if (errno == EINTR) {
