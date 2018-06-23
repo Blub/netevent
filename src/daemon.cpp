@@ -17,6 +17,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include <stdarg.h>
+#include <stdlib.h>
 #include <getopt.h>
 #include <poll.h>
 #include <signal.h>
@@ -372,13 +373,25 @@ finishDeviceRemoval(InDevice *device)
 }
 
 static void
-useOutput(const string& name)
+setEnvVar(const char *name, const char *value)
+{
+	if (::setenv(name, value, 1) != 0) {
+		::fprintf(stderr,
+		          "error setting environment variable %s to %s: %s\n",
+		          name, value, ::strerror(errno));
+	}
+}
+
+static void
+useOutput(int clientfd, const string& name)
 {
 	auto iter = gOutputs.find(name);
 	if (iter == gOutputs.end())
 		throw MsgException("no such output: %s", name.c_str());
 	gCurrentOutput.fd = iter->second.fd();
 	gCurrentOutput.name = name;
+
+	setEnvVar("NETEVENT_OUTPUT_NAME", name.c_str());
 }
 
 static bool
@@ -398,6 +411,7 @@ static void
 grab(bool on)
 {
 	gGrab = on;
+	setEnvVar("NETEVENT_GRABBING", on ? "1" : "0");
 	for (auto& i: gInputs)
 		i.second.device_->grab(on);
 }

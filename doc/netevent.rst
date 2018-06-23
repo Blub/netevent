@@ -169,6 +169,20 @@ DAEMON COMMANDS
 ``info``
     Show current inputs, outputs, devices and hotkeys.
 
+DAEMON ENVIRONMENT VARIABLES
+============================
+
+The daemon will maintain the following environment variables to provide some
+information to commands executed via an ``exec`` hotkey:
+
+* ``NETEVENT_OUTPUT_NAME``
+    This will contain the name of the output currently in use.
+
+* ``NETEVENT_GRABBING``
+    This will be "1" if the daemon is currently grabbing, or "0" if it is not.
+    Note that with multiple input devices, failure to grab an input device will
+    cause this variable to be in an undefined state.
+
 BUGS
 ====
 
