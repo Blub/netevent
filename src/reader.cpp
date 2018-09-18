@@ -231,7 +231,7 @@ InDevice::writeNE2AddDevice(int fd, uint16_t id)
 	NE2Packet pkt = {};
 	::memset(&pkt, 0, sizeof(pkt));
 
-	pkt.cmd = htobe16(NE2Command::AddDevice);
+	pkt.cmd = htobe16(uint16_t(NE2Command::AddDevice));
 	pkt.add_device.id = htobe16(id);
 	pkt.add_device.dev_info_size = htobe16(sizeof(user_dev_));
 	pkt.add_device.dev_name_size = htobe16(sizeof(user_dev_.name));
