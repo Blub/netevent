@@ -197,6 +197,8 @@ OutDevice::newFromNeteventStream(int fd)
 	if (!mustRead(fd, bits.data(), bits.byte_size()))
 		throw ErrnoException("error reading event bits");
 	bits.shrinkTo(EV_MAX);
+	if (EV_FF < bits.size())
+		bits[EV_FF] = 0;
 	for (auto b : bits)
 		if (b)
 			dev->setEventBit(uint16_t(b.index()));
@@ -337,7 +339,7 @@ OutDevice::newFromNE2AddCommand(int fd, NE2Packet& pkt, bool skip)
 		throw ErrnoException("error reading event bits");
 	if (dev) {
 		for (auto bit : evbits)
-			if (bit)
+			if (bit && bit.index() != EV_FF)
 				dev->setEventBit(uint16_t(bit.index()));
 	}
 
@@ -431,6 +433,9 @@ OutDevice::newFromNE2AddCommand(int fd, NE2Packet& pkt)
 void
 OutDevice::write(const InputEvent& ie)
 {
+	// We do not support these:
+	if (ie.type == EV_FF)
+		return;
 	struct input_event ev;
 	ev.time.tv_sec = time_t(ie.tv_sec);
 	ev.time.tv_usec = ie.tv_usec;
