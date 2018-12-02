@@ -33,6 +33,7 @@ using std::map;
 #include "main.h"
 
 #define OUTPUT_CHANGED_EVENT "output-changed"
+#define DEVICE_LOST_EVENT    "device-lost"
 #define GRAB_CHANGED_EVENT   "grab-changed"
 
 static void
@@ -449,8 +450,10 @@ readFromDevice(InDevice *device, uint16_t id)
 {
 	NE2Packet pkt = {};
 	try {
-		if (!device->read(&pkt.event.event))
+		if (!device->read(&pkt.event.event)) {
+			fireEvent(-1, DEVICE_LOST_EVENT);
 			return closeDevice(device);
+		}
 	} catch (const Exception& ex) {
 		::fprintf(stderr, "error reading device: %s\n", ex.what());
 		return closeDevice(device);
@@ -529,8 +532,14 @@ addDevice(const string& name, const char *path)
 		addFD(fd);
 		gFDCBs[fd] = FDCallbacks {
 			[=]() { readFromDevice(weakdevptr, id); },
-			[=]() { closeDevice(weakdevptr); },
-			[=]() { closeDevice(weakdevptr); },
+			[=]() {
+				fireEvent(-1, DEVICE_LOST_EVENT);
+				closeDevice(weakdevptr);
+			},
+			[=]() {
+				fireEvent(-1, DEVICE_LOST_EVENT);
+				closeDevice(weakdevptr);
+			},
 			[=]() { finishDeviceRemoval(weakdevptr); },
 		};
 		gInputs.emplace(name, move(input));

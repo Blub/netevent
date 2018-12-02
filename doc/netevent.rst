@@ -121,6 +121,8 @@ DAEMON COMMANDS
         fallback is being activated.
     * ``grab-changed``
         Executed whenever the ``grab`` command is used.
+    * ``device-lost``
+        Executed whenever a device we are reading from disappears.
 
     These commands are executed immediately after such an event has occurred.
     Note that there's nothing preventing you from building an endless loop by
