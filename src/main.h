@@ -1,7 +1,7 @@
 /*
  * netevent - low-level event-device sharing
  *
- * Copyright (C) 2017 Wolfgang Bumiller <wry.git@bumiller.com>
+ * Copyright (C) 2017,2018 Wolfgang Bumiller <wry.git@bumiller.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
