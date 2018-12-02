@@ -369,7 +369,8 @@ finishDeviceRemoval(InDevice *device)
 {
 	for (auto i = gInputs.begin(); i != gInputs.end(); ++i) {
 		if (i->second.device_.get() == device) {
-			announceDeviceRemoval(i->second);
+			if (!device->persistent())
+				announceDeviceRemoval(i->second);
 			cleanupDeviceHotkeys(i->second.id_);
 			gInputs.erase(i);
 			return;
@@ -701,19 +702,8 @@ addOutput(int clientfd, const vector<string>& args)
 static void
 grabCommand(int clientfd, const char *state)
 {
-	if (!::strcasecmp(state, "1") ||
-	    !::strcasecmp(state, "on") ||
-	    !::strcasecmp(state, "yes") ||
-	    !::strcasecmp(state, "true"))
-	{
-		gGrab = true;
-	}
-	else if (!::strcasecmp(state, "0") ||
-	         !::strcasecmp(state, "no") ||
-	         !::strcasecmp(state, "off") ||
-	         !::strcasecmp(state, "false"))
-	{
-		gGrab = false;
+	if (parseBool(&gGrab, state)) {
+		// nothing
 	}
 	else if (!::strcasecmp(state, "toggle"))
 	{
@@ -850,6 +840,27 @@ clientCommand_Device(int clientfd, const vector<string>& args)
 		dev->resetName();
 		toClient(clientfd, "reset name of device %s\n",
 		         dev->realName().c_str());
+	}
+	else if (args[1] == "set-persistent") {
+		if (args.size() != 4)
+			throw Exception(
+				"'device set-persistent' requires a device"
+				" and a boolean");
+		auto dev = findDevice(args[2]);
+		bool value;
+		if (parseBool(&value, args[3].c_str())) {
+			dev->persistent(value);
+			if (value)
+				toClient(clientfd,
+				         "device %s made persistent\n",
+				         args[2].c_str());
+			else
+				toClient(clientfd,
+				         "device %s made removable\n",
+				         args[2].c_str());
+		} else {
+			toClient(clientfd, "not a boolean: '%s'\n", args[3]);
+		}
 	}
 	else
 		throw MsgException("unknown device subcommand: %s",

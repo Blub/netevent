@@ -356,6 +356,11 @@ struct InDevice {
 	void setName(const string&);
 	void resetName(); // Set to original name (remembered in name_)
 
+	void persistent(bool on) noexcept;
+	bool persistent() const noexcept {
+		return persistent_;
+	}
+
 	void grab(bool on);
 	bool grab() const noexcept {
 		return grabbing_;
@@ -386,10 +391,16 @@ struct InDevice {
 	int fd_;
 	bool eof_ = false;
 	bool grabbing_ = false;
+	bool persistent_ = false;
 	struct uinput_user_dev user_dev_;
 	string name_;
 	Bits evbits_;
 };
+
+inline void
+InDevice::persistent(bool on) noexcept {
+	persistent_ = on;
+}
 
 struct IOHandle {
 	IOHandle(const IOHandle&) = delete;
@@ -548,6 +559,7 @@ mustWrite(int fd, const void *buf, size_t length)
 
 bool parseULong(unsigned long *out, const char *s, size_t maxlen);
 bool parseLong(long *out, const char *s, size_t maxlen);
+bool parseBool(bool *out, const char *s);
 
 template<typename Iter>
 static inline string

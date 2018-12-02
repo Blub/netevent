@@ -186,6 +186,9 @@ DAEMON COMMANDS
 ``device reset-name`` *DEVICE_NAME*
     Reset a device's name to its default.
 
+``device set-persistent`` *DEVICE_NAME* *BOOL*
+    Change whether a device's removal should be announced to the outputs.
+
 ``info``
     Show current inputs, outputs, devices and hotkeys.
 

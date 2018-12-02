@@ -194,6 +194,29 @@ parseULong(unsigned long *out, const char *s, size_t maxlen)
 	return false;
 }
 
+bool
+parseBool(bool *out, const char *s)
+{
+	if (!::strcasecmp(s, "1") ||
+	    !::strcasecmp(s, "on") ||
+	    !::strcasecmp(s, "yes") ||
+	    !::strcasecmp(s, "true"))
+	{
+		*out = true;
+		return true;
+	}
+	else if (!::strcasecmp(s, "0") ||
+	         !::strcasecmp(s, "no") ||
+	         !::strcasecmp(s, "off") ||
+	         !::strcasecmp(s, "false"))
+	{
+		*out = false;
+		return true;
+	}
+	// don't touch *out
+	return false;
+}
+
 unsigned int
 String2EV(const char* text, size_t length)
 {
