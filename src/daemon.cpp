@@ -868,7 +868,8 @@ clientCommand_Device(int clientfd, const vector<string>& args)
 				         "device %s made removable\n",
 				         args[2].c_str());
 		} else {
-			toClient(clientfd, "not a boolean: '%s'\n", args[3]);
+			toClient(clientfd, "not a boolean: '%s'\n",
+			         args[3].c_str());
 		}
 	}
 	else
