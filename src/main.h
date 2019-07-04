@@ -43,6 +43,9 @@
 
 #define Packed __attribute__((packed))
 
+#define LONG_BITS (sizeof(long) * 8)
+#define NLONGS(x) (((x) + LONG_BITS - 1) / LONG_BITS)
+
 using std::string;
 using std::move;
 template<typename T, typename Deleter = std::default_delete<T>>
@@ -54,6 +57,7 @@ int cmd_daemon(int argc, char **argv);
 // C++ doesn't have designated initializers so this is filled in main()
 extern bool gUse_UI_DEV_SETUP;
 extern unsigned long kUISetBitIOC[EV_MAX];
+extern unsigned long kBitLength[EV_MAX];
 
 // "Internal" input event, equal to the usual 64 bit struct input_event
 // because struct timeval varies between architectures

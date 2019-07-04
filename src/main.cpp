@@ -811,6 +811,7 @@ cmd_command(int argc, char **argv)
 }
 
 unsigned long kUISetBitIOC[EV_MAX] = {0};
+unsigned long kBitLength[EV_MAX] = {0};
 int
 main(int argc, char **argv)
 {
@@ -823,6 +824,14 @@ main(int argc, char **argv)
 	kUISetBitIOC[EV_SND] = UI_SET_SNDBIT;
 	kUISetBitIOC[EV_FF ] = UI_SET_FFBIT;
 	kUISetBitIOC[EV_SW ] = UI_SET_SWBIT;
+	kBitLength[EV_KEY] = NLONGS(KEY_CNT);
+	kBitLength[EV_REL] = NLONGS(REL_CNT);
+	kBitLength[EV_ABS] = NLONGS(ABS_CNT);
+	kBitLength[EV_MSC] = NLONGS(MSC_CNT);
+	kBitLength[EV_LED] = NLONGS(LED_CNT);
+	kBitLength[EV_SND] = NLONGS(SND_CNT);
+	kBitLength[EV_FF ] = NLONGS(FF_CNT );
+	kBitLength[EV_SW ] = NLONGS(SW_CNT );
 
 	if (argc < 2)
 		usage(stderr, EXIT_FAILURE);

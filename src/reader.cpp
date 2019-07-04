@@ -284,13 +284,12 @@ InDevice::writeNE2AddDevice(int fd, uint16_t id)
 		// Only transfer bits which matter:
 		if (!ev || !kUISetBitIOC[ev.index()])
 			continue;
-		entrybits.setBitCount(0xFFF);
-		auto bytes = ctl(EVIOCGBIT(ev.index(), entrybits.byte_size()),
-		                 entrybits.data(),
-		                 "failed to query bits for event type %zu",
-		                 ev.index());
-		auto count = bytes * 8;
+		auto count = kBitLength[ev.index()] * LONG_BITS;
 		entrybits.setBitCount(size_t(count));
+		ctl(EVIOCGBIT(ev.index(), entrybits.byte_size()),
+		    entrybits.data(),
+		    "failed to query bits for event type %zu",
+		    ev.index());
 		netbitcount = htobe16(uint16_t(count));
 		iov[1].iov_len = entrybits.byte_size();
 		len = ssize_t(iov[0].iov_len + iov[1].iov_len);
