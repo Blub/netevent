@@ -25,9 +25,17 @@
 #include <sys/uio.h>
 #include <fcntl.h>
 #include <errno.h>
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wreserved-id-macro"
+#pragma clang diagnostic ignored "-Wdocumentation-unknown-command"
 #include <linux/input.h>
 #include <linux/uinput.h>
+#pragma clang diagnostic pop
+#if defined(__FreeBSD__)
+#include <sys/endian.h>
+#else
 #include <endian.h>
+#endif
 
 #include <string>
 #include <utility>
@@ -38,6 +46,9 @@
 #include "../config.h"
 
 #define Packed __attribute__((packed))
+
+#define LONG_BITS (sizeof(long) * 8)
+#define NLONGS(x) (((x) + LONG_BITS - 1) / LONG_BITS)
 
 using std::string;
 using std::move;
@@ -50,6 +61,7 @@ int cmd_daemon(int argc, char **argv);
 // C++ doesn't have designated initializers so this is filled in main()
 extern bool gUse_UI_DEV_SETUP;
 extern unsigned long kUISetBitIOC[EV_MAX];
+extern unsigned long kBitLength[EV_MAX];
 
 // "Internal" input event, equal to the usual 64 bit struct input_event
 // because struct timeval varies between architectures

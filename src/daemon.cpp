@@ -1378,7 +1378,7 @@ cmd_daemon(int argc, char **argv)
 		if (gQuit)
 			break;
 
-		auto got = ::poll(pfds.data(), pfds.size(), -1);
+		auto got = ::poll(pfds.data(), nfds_t(pfds.size()), -1);
 		if (got == -1) {
 			if (errno == EINTR) {
 				::fprintf(stderr, "interrupted\n");
