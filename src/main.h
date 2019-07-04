@@ -25,8 +25,12 @@
 #include <sys/uio.h>
 #include <fcntl.h>
 #include <errno.h>
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wreserved-id-macro"
+#pragma clang diagnostic ignored "-Wdocumentation-unknown-command"
 #include <linux/input.h>
 #include <linux/uinput.h>
+#pragma clang diagnostic pop
 #if defined(__FreeBSD__)
 #include <sys/endian.h>
 #else
