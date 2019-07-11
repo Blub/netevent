@@ -26,7 +26,6 @@
 #include <endian.h>
 #endif
 
-#include <string>
 #include <utility>
 #include <exception>
 #include <memory>
@@ -35,6 +34,7 @@
 #include "../config.h"
 #include "types.h"
 #include "iohandle.h"
+#include "socket.h"
 #include "bitfield.h"
 
 #define Packed __attribute__((packed))
@@ -42,7 +42,6 @@
 #define LONG_BITS (sizeof(long) * 8)
 #define NLONGS(x) (((x) + LONG_BITS - 1) / LONG_BITS)
 
-using std::string;
 using std::move;
 template<typename T, typename Deleter = std::default_delete<T>>
 using uniq = std::unique_ptr<T, Deleter>;
@@ -228,56 +227,6 @@ struct InDevice {
 inline void
 InDevice::persistent(bool on) noexcept {
 	persistent_ = on;
-}
-
-struct Socket {
-	inline Socket() : fd_(-1), path_() {}
-	Socket(const Socket&) = delete;
-	~Socket();
-
-	void openUnixStream();
-	void close();
-	template<bool Abstract> void bindUnix(const string& path);
-	template<bool Abstract> void listenUnix(const string& path);
-	void listen();
-	template<bool Abstract> void connectUnix(const string& path);
-	IOHandle accept();
-	void shutdown(bool read_end);
-
-	int fd() const noexcept {
-		return fd_;
-	}
-
-	operator bool() const noexcept {
-		return fd_ != -1;
-	}
-
-	int release() noexcept {
-		int fd = fd_;
-		fd_ = -1;
-		return fd;
-	}
-
-	IOHandle intoIOHandle() noexcept {
-		return { release() };
-	}
-
-
- private:
-	int fd_;
-	string path_;
-	bool unlink_ = false;
-};
-extern template void Socket::bindUnix<true>(const string& path);
-extern template void Socket::bindUnix<false>(const string& path);
-extern template void Socket::connectUnix<true>(const string& path);
-extern template void Socket::connectUnix<false>(const string& path);
-
-template<bool Abstract>
-inline void
-Socket::listenUnix(const string& path) {
-	bindUnix<Abstract>(path);
-	return listen();
 }
 
 struct ScopeGuard {

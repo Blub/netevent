@@ -7,6 +7,10 @@
  */
 #pragma once
 
+#include <string>
+
+using std::string;
+
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wweak-vtables"
 struct Exception : std::exception {

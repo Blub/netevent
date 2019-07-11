@@ -7,6 +7,9 @@
  */
 #pragma once
 
+#include <fcntl.h>
+#include <unistd.h>
+
 struct IOHandle {
 	IOHandle(const IOHandle&) = delete;
 
