@@ -229,7 +229,7 @@ InDevice::writeNE2AddDevice(int fd, uint16_t id)
 	struct iovec iov[5];
 
 	NE2Packet pkt = {};
-	::memset(&pkt, 0, sizeof(pkt));
+	::memset(reinterpret_cast<void*>(&pkt), 0, sizeof(pkt));
 
 	pkt.cmd = htobe16(uint16_t(NE2Command::AddDevice));
 	pkt.add_device.id = htobe16(id);

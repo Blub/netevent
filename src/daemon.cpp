@@ -184,7 +184,7 @@ static void
 announceDeviceRemoval(Input& input)
 {
 	NE2Packet pkt = {};
-	::memset(&pkt, 0, sizeof(pkt));
+	::memset(reinterpret_cast<void*>(&pkt), 0, sizeof(pkt));
 	pkt.cmd = htobe16(uint16_t(NE2Command::RemoveDevice));
 	pkt.remove_device.id = htobe16(input.id_);
 
