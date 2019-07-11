@@ -34,6 +34,7 @@
 
 #include "../config.h"
 #include "types.h"
+#include "iohandle.h"
 
 #define Packed __attribute__((packed))
 
@@ -376,72 +377,6 @@ inline void
 InDevice::persistent(bool on) noexcept {
 	persistent_ = on;
 }
-
-struct IOHandle {
-	IOHandle(const IOHandle&) = delete;
-
-	constexpr IOHandle(int fd) : fd_(fd) {}
-
-	constexpr IOHandle() : fd_(-1) {}
-
-	IOHandle(IOHandle&& o) : IOHandle(o.fd_) {
-		o.fd_ = -1;
-	}
-
-	~IOHandle() {
-		if (fd_ != -1)
-			::close(fd_);
-	}
-
-	IOHandle& operator=(IOHandle&& o) {
-		this->close();
-		fd_ = o.fd_;
-		o.fd_ = -1;
-		return (*this);
-	}
-
-	int fd() const noexcept {
-		return fd_;
-	}
-
-	ssize_t read(void *buf, size_t count) {
-		return ::read(fd_, buf, count);
-	}
-
-	ssize_t write(const void *buf, size_t count) {
-		return ::write(fd_, buf, count);
-	}
-
-	void close() {
-		if (fd_ != -1) {
-			::close(fd_);
-			fd_ = -1;
-		}
-	}
-
-	int release() noexcept {
-		int fd = fd_;
-		fd_ = -1;
-		return fd;
-	}
-
-	operator bool() const noexcept {
-		return fd_ != -1;
-	}
-
-	void cloexec(bool on) {
-		int flags = ::fcntl(fd_, F_GETFD);
-		if (on)
-			flags |= FD_CLOEXEC;
-		else
-			flags &= ~(FD_CLOEXEC);
-		if (::fcntl(fd_, F_SETFD, flags) < 0)
-			throw ErrnoException("failed to set FD_CLOEXEC flags");
-	}
-
- private:
-	int fd_;
-};
 
 struct Socket {
 	inline Socket() : fd_(-1), path_() {}
