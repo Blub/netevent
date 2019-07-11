@@ -33,6 +33,7 @@
 #include <functional>
 
 #include "../config.h"
+#include "types.h"
 
 #define Packed __attribute__((packed))
 
@@ -127,35 +128,8 @@ unsigned int String2EV(const char* name, size_t length);
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wweak-vtables"
-struct Exception : std::exception {
-	Exception(const char *msg) : msg_(msg) {}
-	const char *what() const noexcept override;
- protected:
-	Exception() : Exception(nullptr) {}
- private:
-	const char *msg_;
-};
-
 struct DeviceException : Exception {
 	DeviceException(const char *msg);
-};
-
-struct MsgException : Exception {
-	MsgException(const MsgException&) = delete;
-	MsgException(MsgException&& o);
-	MsgException(const char *msg, ...);
- private:
-	char msgbuf_[4096];
-};
-
-struct ErrnoException : Exception {
-	ErrnoException(const ErrnoException&) = delete;
-	ErrnoException(ErrnoException&& o);
-	ErrnoException(const char *msg, ...);
-	int error() const noexcept { return errno_; }
- private:
-	int errno_;
-	char msgbuf_[4096];
 };
 #pragma clang diagnostic pop
 
