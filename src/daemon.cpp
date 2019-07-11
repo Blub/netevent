@@ -129,7 +129,6 @@ static void parseClientCommand(int clientfd, const char *cmd, size_t length);
 static void
 daemon_preExec()
 {
-	gOutputs.clear();
 	gFDCBs.clear();
 }
 
@@ -594,7 +593,7 @@ addOutput_Open(const char *path)
 {
 	// Use O_NDELAY to not hang on FIFOs. FIFOs should already be waiting
 	// for our connection, we remove O_NONBLOCK below again.
-	int fd = ::open(path, O_WRONLY | O_NDELAY);
+	int fd = ::open(path, O_WRONLY | O_NDELAY | O_CLOEXEC);
 	if (fd < 0)
 		throw ErrnoException("open(%s)", path);
 	IOHandle handle { fd };
@@ -612,7 +611,7 @@ static IOHandle
 addOutput_Exec(const char *path)
 {
 	int pfd[2];
-	if (::pipe(pfd) != 0)
+	if (::pipe2(pfd, O_CLOEXEC) != 0)
 		throw ErrnoException("pipe() failed");
 	IOHandle pr { pfd[0] };
 	IOHandle pw { pfd[1] };
@@ -623,6 +622,7 @@ addOutput_Exec(const char *path)
 
 	if (!pid) {
 		pw.close();
+		pr.cloexec(false); // We need this one in our subprocess!
 
 		if (pr.fd() != 0) {
 			if (::dup2(pr.fd(), 0) != 0) {
