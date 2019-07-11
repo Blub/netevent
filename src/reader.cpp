@@ -55,7 +55,7 @@ InDevice::InDevice(const string& path)
 {
 	::memset(&user_dev_, 0, sizeof(user_dev_));
 
-	fd_ = ::open(path.c_str(), O_RDONLY);
+	fd_ = ::open(path.c_str(), O_RDONLY | O_CLOEXEC);
 	if (fd_ < 0)
 		throw ErrnoException("open(%s)", path.c_str());
 

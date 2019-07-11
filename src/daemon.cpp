@@ -129,7 +129,6 @@ static void parseClientCommand(int clientfd, const char *cmd, size_t length);
 static void
 daemon_preExec()
 {
-	gInputs.clear(); // closes event devices
 	gOutputs.clear();
 	gFDCBs.clear();
 }
