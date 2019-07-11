@@ -31,18 +31,20 @@
 #include <memory>
 #include <functional>
 
+using std::move;
+
 #include "../config.h"
 #include "types.h"
 #include "iohandle.h"
 #include "socket.h"
 #include "bitfield.h"
+#include "utils.h"
 
 #define Packed __attribute__((packed))
 
 #define LONG_BITS (sizeof(long) * 8)
 #define NLONGS(x) (((x) + LONG_BITS - 1) / LONG_BITS)
 
-using std::move;
 template<typename T, typename Deleter = std::default_delete<T>>
 using uniq = std::unique_ptr<T, Deleter>;
 using std::function;
@@ -227,72 +229,6 @@ struct InDevice {
 inline void
 InDevice::persistent(bool on) noexcept {
 	persistent_ = on;
-}
-
-struct ScopeGuard {
-	ScopeGuard() = delete;
-	ScopeGuard(ScopeGuard&& o) : f_(move(o.f_)) {}
-	ScopeGuard(const ScopeGuard&) = delete;
-	ScopeGuard(function<void()> f) : f_(f) {}
-	~ScopeGuard() { f_(); }
- private:
-	function<void()> f_;
-};
-struct ScopeGuardHelper { // actually gets rid of an unused-variable warning
-	constexpr ScopeGuardHelper() {}
-	ScopeGuard operator+(function<void()> f) {
-		return {move(f)};
-	}
-};
-#define NE2_CPP_CAT_INDIR(X,Y) X ## Y
-#define NE2_CPP_CAT(X,Y) NE2_CPP_CAT_INDIR(X, Y)
-#define NE2_CPP_ADDLINE(X) NE2_CPP_CAT(X, __LINE__)
-#define scope(exit) \
-  auto NE2_CPP_ADDLINE(ne2_scopeguard) = ScopeGuardHelper{}+[&]()
-
-static inline
-bool
-mustRead(int fd, void *buf, size_t length)
-{
-	while (length) {
-		auto got = ::read(fd, buf, length);
-		if (got == 0)
-			errno = 0;
-		if (got <= 0)
-			return false;
-		if (size_t(got) > length) {
-			errno = EFAULT;
-			return false;
-		}
-		buf = reinterpret_cast<void*>(
-		    reinterpret_cast<uint8_t*>(buf) + got);
-		length -= size_t(got);
-	}
-	return true;
-}
-
-static inline
-bool
-mustWrite(int fd, const void *buf, size_t length)
-{
-	return ::write(fd, buf, length) == ssize_t(length);
-}
-
-bool parseULong(unsigned long *out, const char *s, size_t maxlen);
-bool parseLong(long *out, const char *s, size_t maxlen);
-bool parseBool(bool *out, const char *s);
-
-template<typename Iter>
-static inline string
-join(char c, Iter&& i, Iter&& end)
-{
-	string s;
-	for (; i != end; ++i) {
-		if (s.length())
-			s.append(1, c);
-		s.append(*i);
-	}
-	return s;
 }
 
 struct {
