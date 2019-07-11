@@ -45,7 +45,7 @@ void
 Socket::openUnixStream()
 {
 	close();
-	fd_ = ::socket(AF_UNIX, SOCK_STREAM, 0);
+	fd_ = ::socket(AF_UNIX, SOCK_STREAM | SOCK_CLOEXEC, 0);
 	if (fd_ < 0)
 		throw ErrnoException("failed to open socket");
 }

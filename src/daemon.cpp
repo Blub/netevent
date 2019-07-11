@@ -95,8 +95,6 @@ struct HotkeyDef {
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wexit-time-destructors"
 #pragma clang diagnostic ignored "-Wglobal-constructors"
-
-static int                   gServerFD;
 static bool                  gQuit = false;
 static vector<int>           gFDRemoveQueue;
 static vector<struct pollfd> gFDAddQueue;
@@ -131,7 +129,6 @@ static void parseClientCommand(int clientfd, const char *cmd, size_t length);
 static void
 daemon_preExec()
 {
-	::close(gServerFD);
 	gCommandClients.clear(); // closes fds
 	gInputs.clear(); // closes event devices
 	gOutputs.clear();
@@ -1313,8 +1310,6 @@ cmd_daemon(int argc, char **argv)
 		(void)::unlink(sockname);
 		server.listenUnix<false>(sockname);
 	}
-
-	gServerFD = server.fd();
 
 	vector<struct pollfd> pfds;
 	pfds.resize(1);
