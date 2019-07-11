@@ -714,7 +714,7 @@ removeHotkey(uint16_t device, uint16_t type, uint16_t code, int32_t value)
 }
 
 static void
-shellCommand(const char *cmd)
+shellCommand(const char *cmd, bool background)
 {
 	pid_t pid = ::fork();
 	if (pid == -1)
@@ -725,6 +725,9 @@ shellCommand(const char *cmd)
 		::perror("exec() failed");
 		::exit(-1);
 	}
+	if (background)
+		return;
+
 	int status = 0;
 	do {
 		// wait
@@ -1090,11 +1093,12 @@ clientCommand(int clientfd, const vector<string>& args)
 		//toClient(clientfd, "output = %s\n",
 		//         gCurrentOutput.name.c_str());
 	}
-	else if (args[0] == "exec") {
+	else if (args[0] == "exec" || args[0] == "exec&") {
+		bool background = args[0] == "exec&";
 		if (args.size() < 2)
 			throw Exception("'exec' requires 1 parameter");
 		string cmd = join(' ', args.begin()+1, args.end());
-		shellCommand(cmd.c_str());
+		shellCommand(cmd.c_str(), background);
 	}
 	else if (args[0] == "source") {
 		if (args.size() != 2)

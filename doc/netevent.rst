@@ -160,6 +160,9 @@ DAEMON COMMANDS
 ``exec`` *COMMAND*
     Execute a command. Mostly useful for hotkeys.
 
+``exec&`` *COMMAND*
+    Execute a command in the background.
+
 ``source`` *FILE*
     Execute daemon commands from a file.
 
