@@ -466,6 +466,16 @@ struct IOHandle {
 		return fd_ != -1;
 	}
 
+	void cloexec(bool on) {
+		int flags = ::fcntl(fd_, F_GETFD);
+		if (on)
+			flags |= FD_CLOEXEC;
+		else
+			flags &= ~(FD_CLOEXEC);
+		if (::fcntl(fd_, F_SETFD, flags) < 0)
+			throw ErrnoException("failed to set FD_CLOEXEC flags");
+	}
+
  private:
 	int fd_;
 };
