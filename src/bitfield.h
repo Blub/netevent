@@ -7,6 +7,8 @@
  */
 #pragma once
 
+#include <stdlib.h>
+
 struct Bits {
 	Bits();
 	Bits(const Bits&) = delete; // this needs to be explicitly dup()ed
