@@ -34,7 +34,8 @@ OBJECTS := src/main.o \
            src/daemon.o \
            src/writer.o \
            src/reader.o \
-           src/socket.o
+           src/socket.o \
+           src/bitfield.o
 
 MAN1PAGES-y := doc/netevent.1
 
