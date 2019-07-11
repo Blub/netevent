@@ -113,8 +113,6 @@ static struct {
 static bool                  gGrab = false;
 static map<HotkeyDef, string> gHotkeys;
 static map<string, string>   gEventCommands;
-
-static vector<function<void()>> gPreExecStack;
 #pragma clang diagnostic pop
 
 #if 0
@@ -130,20 +128,9 @@ vectorRemove(vector<T>& vec, T&& value)
 
 static void parseClientCommand(int clientfd, const char *cmd, size_t length);
 
-static ScopeGuard
-preExec(function<void()> func)
-{
-	auto idx = gPreExecStack.size();
-	gPreExecStack.emplace_back(move(func));
-	return {[idx]() { gPreExecStack[idx] = nullptr; }};
-}
-
 static void
 daemon_preExec()
 {
-	for (auto& f: gPreExecStack)
-		if (f)
-			f();
 	::close(gServerFD);
 	gCommandClients.clear(); // closes fds
 	gInputs.clear(); // closes event devices
@@ -1220,15 +1207,11 @@ processCommandQueue()
 static void
 sourceCommandFile(int clientfd, const char *path)
 {
-	FILE *file = ::fopen(path, "rb");
+	FILE *file = ::fopen(path, "rbe");
 	if (!file)
 		throw ErrnoException("open(%s)", path);
 	char *line = nullptr;
 
-	auto exec_guard = preExec([file,&line]() {
-		::fclose(file);
-		::free(line);
-	});
 	scope (exit) {
 		::fclose(file);
 		::free(line);
