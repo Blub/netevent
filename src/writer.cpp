@@ -39,7 +39,7 @@ OutDevice::OutDevice(const string& name, struct input_id id)
 		throw DeviceException("device name too long");
 
 	for (const char *path : gDevicePaths) {
-		fd_ = ::open(path, O_WRONLY | O_NDELAY);
+		fd_ = ::open(path, O_WRONLY | O_NDELAY | O_CLOEXEC);
 		if (fd_ < 0) {
 			if (errno != ENOENT)
 				throw ErrnoException(
