@@ -84,13 +84,15 @@ fi
 echo -n 'Checking for rst2man...'
 if isautoyes "$enable_doc"; then
   ENABLE_DOC=y
-  RST2MAN="$(which rst2man 2>/dev/null)"
-  if [ $? -ne 0 ]; then
-    ENABLE_DOC=
-    RST2MAN=
-    if [ "x$enable_doc" != "xauto" ]; then
-      echo "failed to find rst2man" >&2
-      exit 1
+  if test -z "$RST2MAN"; then
+    RST2MAN="$(which rst2man 2>/dev/null)"
+    if [ $? -ne 0 ]; then
+      ENABLE_DOC=
+      RST2MAN=
+      if [ "x$enable_doc" != "xauto" ]; then
+        echo "failed to find rst2man" >&2
+        exit 1
+      fi
     fi
   fi
 else

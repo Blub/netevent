@@ -67,8 +67,10 @@ install-do: $(BINARY) $(MAN1PAGES)
 	install -dm755 $(DESTDIR)
 	install -dm755 $(DESTDIR)$(BINDIR)
 	install -Tm755 $(BINARY) $(DESTDIR)$(BINDIR)/$(BINARY)
+ifeq ($(ENABLE_DOC), y)
 	install -dm755 $(DESTDIR)$(MAN1DIR)
 	install -m644 -t $(DESTDIR)$(MAN1DIR) $(MAN1PAGES)
+endif
 
 distclean: clean
 	rm -f config.h
