@@ -1,3 +1,19 @@
+netevent (2.1+git-1~local) unstable; urgency=medium
+
+  * Non-maintainer upload.
+  * Updates rule to adapt to non-standard configure script.
+  * Bump debhelper compat level to 12.
+  * Switch to source format 3.0.
+  * Add missing misc:Depends.
+  * Update copyright years.
+  * Bumped Standards-Version to 4.5.0 (no changes required).
+  * Add watch file.
+  * Use Python 3 docutils by default since Python 2 is being dropped in
+    Debian.
+  * add README.source.
+
+ -- Marc Dequènes (Duck) <Duck@DuckCorp.org>  Thu, 23 Apr 2020 01:41:41 +0900
+
 netevent (2.0-1) unstable; urgency=medium
 
   * Initial release

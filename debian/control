@@ -3,14 +3,14 @@ Section: utils
 Priority: optional
 Maintainer: Wolfgang Bumiller <wry.git@bumiller.com>
 Build-Depends:
- debhelper (>= 8),
- python-docutils | python3-docutils
-Standards-Version: 3.8.0
+ debhelper-compat (= 12),
+ python3-docutils | python-docutils
+Standards-Version: 4.5.0
 Homepage: https://github.com/Blub/netevent
 
 Package: netevent
 Architecture: any
-Depends: ${shlibs:Depends}
+Depends: ${shlibs:Depends}, ${misc:Depends}
 Description: Utility to clone event devices
  This tool allows inspecting the input events created by event devices as well
  as cloning/sending such devices to clone them or share them with other

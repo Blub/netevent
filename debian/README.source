@@ -1,0 +1,8 @@
+
+To generate the upstream source tarball use:
+  git archive --prefix=netevent/ -o ../netevent_<version>.orig.tar.gz HEAD
+with <version> the upstream target version.
+
+Then you can build it with dpkg-buildpackage or sbuild;, see official
+Debian documentation.
+
