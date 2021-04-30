@@ -46,14 +46,11 @@ all: $(BINARY) $(MAN1PAGES)
 config.h:
 	./configure
 
-# the src/*.d files contain 'src/../config.h' for this:
-src/../config.h: config.h
-
 $(BINARY): $(OBJECTS)
 	$(CXX) $(LDFLAGS) -o $@ $(OBJECTS)
 
 .cpp.o:
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c -o $@ $< -MMD -MT $@ -MF $(@:.o=.d)
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -I. -c -o $@ $< -MMD -MT $@ -MF $(@:.o=.d)
 
 .SUFFIXES: .1 .rst
 .rst.1:

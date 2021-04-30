@@ -33,7 +33,7 @@
 
 using std::move;
 
-#include "../config.h"
+#include "config.h"
 #include "types.h"
 #include "iohandle.h"
 #include "socket.h"
