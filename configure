@@ -54,6 +54,11 @@ done
 rm -f config.log
 exec 4>config.log
 
+absdirname()
+(cd `dirname $1`; pwd)
+
+SOURCEDIR=`absdirname $0`
+
 PREFIX="${PREFIX:-/usr/local}"
 BINDIR="${BINDIR:-${PREFIX}/bin}"
 DATAROOTDIR="${DATAROOTDIR:-${PREFIX}/share}"
@@ -150,5 +155,13 @@ MAN1DIR = ${MAN1DIR}
 ENABLE_DOC = ${ENABLE_DOC}
 RST2MAN = ${RST2MAN}
 CXX = ${CXX}
+SOURCEDIR = ${SOURCEDIR}
 EOF
 
+if [ "${SOURCEDIR}" != "${PWD}" ]; then
+	# Only use VPATH for out-of-tree builds; it can be problematic for some
+	# variants of `make` and users of these variants will be limited to in-tree
+	# builds only.
+	echo >>config.mak "VPATH = ${SOURCEDIR}"
+	cp "${SOURCEDIR}/Makefile" ./
+fi
