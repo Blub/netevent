@@ -7,6 +7,8 @@ DATAROOTDIR = $(PREFIX)/share
 MANDIR = $(DATAROOTDIR)/man
 MAN1DIR = $(MANDIR)/man1
 
+SOURCEDIR ?= .
+
 CPPFLAGS ?= -g
 CPPFLAGS += -Wall -Werror -Wno-unknown-pragmas
 CXX ?= clang++
@@ -46,14 +48,15 @@ all: $(BINARY) $(MAN1PAGES)
 config.h:
 	./configure
 
-# the src/*.d files contain 'src/../config.h' for this:
-src/../config.h: config.h
+Makefile: $(SOURCEDIR)/Makefile
+	cp $< $@
+	+$(MAKE) $(MAKECMDGOALS)
 
 $(BINARY): $(OBJECTS)
 	$(CXX) $(LDFLAGS) -o $@ $(OBJECTS)
 
 .cpp.o:
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c -o $@ $< -MMD -MT $@ -MF $(@:.o=.d)
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -I. -c -o $@ $< -MMD -MT $@ -MF $(@:.o=.d)
 
 .SUFFIXES: .1 .rst
 .rst.1:
@@ -78,6 +81,10 @@ distclean: clean
 clean:
 	rm -f src/*.o src/*.d doc/*.1
 
-$(OBJECTS): config.h
+$(CURDIR)/doc $(CURDIR)/src:
+	mkdir -p $@
+
+$(OBJECTS): Makefile config.h $(CURDIR)/src
+$(MAN1PAGES): $(CURDIR)/doc
 
 -include src/*.d
