@@ -119,6 +119,8 @@ DAEMON COMMANDS
     * ``output-changed``
         Executed on a ``use`` command or when an output device fails and a
         fallback is being activated.
+    * ``write-changed``
+        Executed whenever the ``write`` command is used.
     * ``grab-changed``
         Executed whenever the ``grab`` command is used.
     * ``device-lost``
@@ -135,8 +137,10 @@ DAEMON COMMANDS
     Nothing. Bind as hotkey to ignore an event and be explicit about it.
 
 ``grab``\  *on*\ \|\ *off*\ \|\ *toggle*
-    Set the grabbing state. Currently this also controls whether events are
-    passed to the current output.
+    Set the grabbing state. Controls whether events are also fired locally.
+
+``write``\  *on*\ \|\ *off*\ \|\ *toggle*
+    Set the writing state. Controls whether events are passed to the current output.
 
 ``use`` *OUTPUT*
     Set the current output.
@@ -210,6 +214,9 @@ information to commands executed via an ``exec`` hotkey:
     This will be "1" if the daemon is currently grabbing, or "0" if it is not.
     Note that with multiple input devices, failure to grab an input device will
     cause this variable to be in an undefined state.
+
+* ``NETEVENT_WRITING``
+    This will be "1" if the daemon is currently writing, or "0" if it is not.
 
 BUGS
 ====

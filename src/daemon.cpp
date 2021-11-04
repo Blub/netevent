@@ -24,6 +24,7 @@ using std::map;
 #define OUTPUT_CHANGED_EVENT "output-changed"
 #define DEVICE_LOST_EVENT    "device-lost"
 #define GRAB_CHANGED_EVENT   "grab-changed"
+#define WRITE_CHANGED_EVENT  "write-changed"
 
 static void
 usage_daemon [[noreturn]] (FILE *out, int exit_status)
@@ -97,6 +98,7 @@ static struct {
 	int fd = -1;
 	string name;
 }                            gCurrentOutput;
+static bool                  gWrite = false;
 static bool                  gGrab = false;
 static map<HotkeyDef, string> gHotkeys;
 static map<string, string>   gEventCommands;
@@ -397,6 +399,14 @@ tryHotkey(uint16_t device, uint16_t type, uint16_t code, int32_t value)
 }
 
 static void
+write(int clientfd, bool on)
+{
+	gWrite = on;
+	setEnvVar("NETEVENT_WRITING", on ? "1" : "0");
+	fireEvent(clientfd, WRITE_CHANGED_EVENT);
+}
+
+static void
 grab(int clientfd, bool on)
 {
 	gGrab = on;
@@ -411,6 +421,8 @@ lostCurrentOutput()
 {
 	gCurrentOutput.fd = -1;
 	gCurrentOutput.name = "<none>";
+	if (gWrite)
+		write(-1, false);
 	if (gGrab)
 		grab(-1, false);
 }
@@ -436,9 +448,7 @@ readFromDevice(InDevice *device, uint16_t id)
 	if (gCurrentOutput.fd == -1)
 		return;
 
-	// FIXME: currently we only write when grabbing; if anyone needs to b
-	// e able to control this separately... PR welcome
-	if (!gGrab)
+	if (!gWrite)
 		return;
 
 	pkt.cmd = htobe16(uint16_t(NE2Command::DeviceEvent));
@@ -677,6 +687,21 @@ addOutput(int clientfd, const vector<string>& args)
 	string cmd = join(' ', args.begin()+ssize_t(at), args.end());
 	addOutput(name, cmd.c_str(), skip_announce);
 	toClient(clientfd, "added output %s\n", name.c_str());
+}
+
+static void
+writeCommand(int clientfd, const char *state)
+{
+	if (parseBool(&gWrite, state)) {
+		// nothing
+	}
+	else if (!::strcasecmp(state, "toggle"))
+	{
+		gWrite = !gWrite;
+	}
+	else
+		throw MsgException("unknown write state: %s", state);
+	write(clientfd, gWrite);
 }
 
 static void
@@ -989,6 +1014,7 @@ clientCommand_Info(int clientfd, const vector<string>& args)
 	(void)args;
 
 	toClient(clientfd, "Grab: %s\n", gGrab ? "on" : "off");
+	toClient(clientfd, "Write: %s\n", gWrite ? "on" : "off");
 	toClient(clientfd, "Inputs: %zu\n", gInputs.size());
 	for (auto& i: gInputs) {
 		toClient(clientfd, "    %u: %s: %i\n",
@@ -1080,6 +1106,12 @@ clientCommand(int clientfd, const vector<string>& args)
 		clientCommand_Action(clientfd, args);
 	else if (args[0] == "info")
 		clientCommand_Info(clientfd, args);
+	else if (args[0] == "write") {
+		if (args.size() != 2)
+			throw Exception("'write' requires 1 parameter");
+		writeCommand(clientfd, args[1].c_str());
+		//toClient(clientfd, "write = %u\n", gWrite ? 1 : 0);
+	}
 	else if (args[0] == "grab") {
 		if (args.size() != 2)
 			throw Exception("'grab' requires 1 parameter");
