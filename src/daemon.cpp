@@ -1013,8 +1013,8 @@ clientCommand_Info(int clientfd, const vector<string>& args)
 {
 	(void)args;
 
-	toClient(clientfd, "Grab: %s\n", gGrab ? "on" : "off");
-	toClient(clientfd, "Write: %s\n", gWrite ? "on" : "off");
+	toClient(clientfd, "Grab-devices: %s\n", gGrab ? "on" : "off");
+	toClient(clientfd, "Write-events: %s\n", gWrite ? "on" : "off");
 	toClient(clientfd, "Inputs: %zu\n", gInputs.size());
 	for (auto& i: gInputs) {
 		toClient(clientfd, "    %u: %s: %i\n",
@@ -1106,17 +1106,24 @@ clientCommand(int clientfd, const vector<string>& args)
 		clientCommand_Action(clientfd, args);
 	else if (args[0] == "info")
 		clientCommand_Info(clientfd, args);
-	else if (args[0] == "write") {
+	else if (args[0] == "write-events") {
 		if (args.size() != 2)
-			throw Exception("'write' requires 1 parameter");
+			throw Exception("'write-events' requires 1 parameter");
 		writeCommand(clientfd, args[1].c_str());
-		//toClient(clientfd, "write = %u\n", gWrite ? 1 : 0);
+		//toClient(clientfd, "write-events = %u\n", gWrite ? 1 : 0);
+	}
+	else if (args[0] == "grab-devices") {
+		if (args.size() != 2)
+			throw Exception("'grab-devices' requires 1 parameter");
+		grabCommand(clientfd, args[1].c_str());
+		//toClient(clientfd, "grab-devices = %u\n", gGrab ? 1 : 0);
 	}
 	else if (args[0] == "grab") {
 		if (args.size() != 2)
 			throw Exception("'grab' requires 1 parameter");
 		grabCommand(clientfd, args[1].c_str());
-		//toClient(clientfd, "grab = %u\n", gGrab ? 1 : 0);
+		writeCommand(clientfd, args[1].c_str());
+		toClient(clientfd, "Warning: the command grab is deprecated, use grab-devices and write-events instead.\n");
 	}
 	else if (args[0] == "use") {
 		if (args.size() != 2)

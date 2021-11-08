@@ -120,9 +120,9 @@ DAEMON COMMANDS
         Executed on a ``use`` command or when an output device fails and a
         fallback is being activated.
     * ``write-changed``
-        Executed whenever the ``write`` command is used.
+        Executed whenever the ``write-events`` command is used.
     * ``grab-changed``
-        Executed whenever the ``grab`` command is used.
+        Executed whenever the ``grab-devices`` command is used.
     * ``device-lost``
         Executed whenever a device we are reading from disappears.
 
@@ -136,11 +136,15 @@ DAEMON COMMANDS
 ``nop``
     Nothing. Bind as hotkey to ignore an event and be explicit about it.
 
-``grab``\  *on*\ \|\ *off*\ \|\ *toggle*
+``grab-devices``\  *on*\ \|\ *off*\ \|\ *toggle*
     Set the grabbing state. Controls whether events are also fired locally.
 
-``write``\  *on*\ \|\ *off*\ \|\ *toggle*
+``write-events``\  *on*\ \|\ *off*\ \|\ *toggle*
     Set the writing state. Controls whether events are passed to the current output.
+
+``grab``\  *on*\ \|\ *off*\ \|\ *toggle*
+    Deprecated. This is the old command which has been superseeded by the pair
+    ``grab-devices`` and ``write-events``.
 
 ``use`` *OUTPUT*
     Set the current output.

@@ -24,9 +24,9 @@ device reset-name my-mouse
 device reset-name my-kbd
 
 # Add hotkeys to switch between host, laptop and the VM
-hotkey add my-kbd key:188:1 use vm0\; grab on; write on
+hotkey add my-kbd key:188:1 use vm0\; grab-devices on; write-events on
 hotkey add my-kbd key:188:0 nop
-hotkey add my-kbd key:187:1 use laptop\; grab on; write on
+hotkey add my-kbd key:187:1 use laptop\; grab-devices on; write-events on
 hotkey add my-kbd key:187:0 nop
-hotkey add my-kbd key:186:1 grab off; write off
+hotkey add my-kbd key:186:1 grab-devices off; write-events off
 hotkey add my-kbd key:186:0 nop
