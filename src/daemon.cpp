@@ -1123,7 +1123,9 @@ clientCommand(int clientfd, const vector<string>& args)
 			throw Exception("'grab' requires 1 parameter");
 		grabCommand(clientfd, args[1].c_str());
 		writeCommand(clientfd, args[1].c_str());
-		toClient(clientfd, "Warning: the command grab is deprecated, use grab-devices and write-events instead.\n");
+		toClient(clientfd,
+			 "Warning: the command grab is deprecated,"
+			 " use grab-devices and write-events instead.\n");
 	}
 	else if (args[0] == "use") {
 		if (args.size() != 2)
