@@ -93,7 +93,7 @@ Host side:
     device add mykbd /dev/input/by-id/usb-MyAwesomeKeyboard-event-kbd
 
     # Add toggle hotkey (on press, and ignore the release event)
-    hotkey add mykbd key:189:1 grab-devices toggle; write-events toggle
+    hotkey add mykbd key:189:1 grab-devices toggle\; write-events toggle
     hotkey add mykbd key:189:0 nop
 
     # Connect to the two devices via password-less ssh
