@@ -3,10 +3,10 @@ device add my-mouse /dev/input/by-id/usb-MyCoolMouse-if01-event-mouse
 device add my-kbd /dev/input/by-id/usb-MyCoolKeyboard-event-kbd
 
 # Add toggle hotkey (on press, and ignore the release event)
-hotkey add my-kbd key:189:1 grab toggle
+hotkey add my-kbd key:189:1 grab-devices toggle; write-events toggle
 hotkey add my-kbd key:189:0 nop
 
 # Add my usual output:
 output add laptop exec:ssh myuser@mylaptop netevent create
-# Cause grabbing to write to that output
+# Select the output to write to
 use laptop
