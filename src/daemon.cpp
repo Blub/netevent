@@ -399,7 +399,7 @@ tryHotkey(uint16_t device, uint16_t type, uint16_t code, int32_t value)
 }
 
 static void
-write(int clientfd, bool on)
+writeEvents(int clientfd, bool on)
 {
 	gWrite = on;
 	setEnvVar("NETEVENT_WRITING", on ? "1" : "0");
@@ -422,7 +422,7 @@ lostCurrentOutput()
 	gCurrentOutput.fd = -1;
 	gCurrentOutput.name = "<none>";
 	if (gWrite)
-		write(-1, false);
+		writeEvents(-1, false);
 	if (gGrab)
 		grab(-1, false);
 }
@@ -701,7 +701,7 @@ writeCommand(int clientfd, const char *state)
 	}
 	else
 		throw MsgException("unknown write state: %s", state);
-	write(clientfd, gWrite);
+	writeEvents(clientfd, gWrite);
 }
 
 static void
