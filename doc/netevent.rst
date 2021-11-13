@@ -140,7 +140,8 @@ DAEMON COMMANDS
     Set the grabbing state. Controls whether events are also fired locally.
 
 ``write-events``\  *on*\ \|\ *off*\ \|\ *toggle*
-    Set the writing state. Controls whether events are passed to the current output.
+    Set the writing state. Controls whether events are passed to the current
+    output.
 
 ``grab``\  *on*\ \|\ *off*\ \|\ *toggle*
     Deprecated. This is the old command which has been superseeded by the pair
