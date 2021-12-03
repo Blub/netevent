@@ -36,6 +36,9 @@ All subcommands:
 ``-h, --help``
     Show a short usage message.
 
+``-V, --version``
+    Show the netevent version string.
+
 ``netevent create``
 ----------------------------------------
 

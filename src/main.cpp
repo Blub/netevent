@@ -80,6 +80,15 @@ usage [[noreturn]] (FILE *out, int exit_status)
 	::exit(exit_status);
 }
 
+static void
+version [[noreturn]] (FILE *out, int exit_status)
+{
+	::fprintf(out,
+"netevent version " NETEVENT_VERSION "\n"
+);
+	::exit(exit_status);
+}
+
 // ::strtoul() doesn't support a maxlen and I want to be able to use this in
 // the middle of command parsing... or stuff.
 static bool
@@ -824,6 +833,10 @@ main(int argc, char **argv)
 
 	if (argc < 2)
 		usage(stderr, EXIT_FAILURE);
+
+	if (!::strcmp(argv[1], "-V") ||
+	    !::strcmp(argv[1], "--version"))
+		version(stdout, EXIT_SUCCESS);
 
 	if (!::strcmp(argv[1], "-h") ||
 	    !::strcmp(argv[1], "-?") ||
