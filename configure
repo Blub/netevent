@@ -59,6 +59,8 @@ absdirname()
 
 SOURCEDIR=`absdirname $0`
 
+NETEVENT_VERSION="$(sed -ne '/^# Release/{s/^# Release\s*//;p;q}' "$SOURCEDIR/ChangeLog.md")"
+
 PREFIX="${PREFIX:-/usr/local}"
 BINDIR="${BINDIR:-${PREFIX}/bin}"
 DATAROOTDIR="${DATAROOTDIR:-${PREFIX}/share}"
@@ -141,6 +143,7 @@ rm -f config.h
 echo '#ifndef NETEVENT_2_CONFIG_H' >>config.h
 echo '#define NETEVENT_2_CONFIG_H' >>config.h
 echo >>config.h
+echo "#define NETEVENT_VERSION \"$NETEVENT_VERSION\"" >>config.h
 echo "$HAS_UI_DEV_SETUP" >>config.h
 echo >>config.h
 echo '#endif' >>config.h
