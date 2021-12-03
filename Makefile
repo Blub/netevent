@@ -84,7 +84,7 @@ clean:
 $(CURDIR)/doc $(CURDIR)/src:
 	mkdir -p $@
 
-$(OBJECTS): Makefile config.h $(CURDIR)/src
+$(OBJECTS): Makefile config.h | $(CURDIR)/src
 $(MAN1PAGES): $(CURDIR)/doc
 
 -include src/*.d
