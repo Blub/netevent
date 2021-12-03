@@ -226,6 +226,13 @@ information to commands executed via an ``exec`` hotkey:
 * ``NETEVENT_WRITING``
     This will be "1" if the daemon is currently writing, or "0" if it is not.
 
+KNOWN INTERACTIONS WITH X11
+===========================
+
+When using the synaptics X11 driver, it can be configured to grab event
+devices, which will prevent netevent from grabbing them. You may need to
+change the ``GrabEventDevice`` option in your ``xorg.conf``.
+
 BUGS
 ====
 
