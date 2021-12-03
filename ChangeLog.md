@@ -1,0 +1,12 @@
+# Release 2.2
+
+* Writing outputs and grabbing input is now managed separately.
+* The `grab` command is deprecated and split into the following two new
+  commands:
+  * `grab-devices` for input device grabbing.
+  * `write-events` for sending the events.
+* support out of tree builds
+
+# Prior to 2.2
+
+See git history.
