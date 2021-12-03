@@ -1,3 +1,7 @@
+# Release 2.2.1
+
+* add `-V`/`--version` command line option. (#22)
+
 # Release 2.2
 
 * Writing outputs and grabbing input is now managed separately.

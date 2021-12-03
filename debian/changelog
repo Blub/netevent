@@ -1,4 +1,4 @@
-netevent (2.2-1) unreleased; urgency=medium
+netevent (2.2.1-1) unreleased; urgency=medium
 
   * Writing outputs and grabbing input is now managed separately.
   * The `grab` command is deprecated and split into the following two new
@@ -6,6 +6,7 @@ netevent (2.2-1) unreleased; urgency=medium
     * `grab-devices` for input device grabbing.
     * `write-events` for sending the events.
   * support out of tree builds
+  * Added --version/-V command line option
 
  -- Wolfgang Bumiller <wry.git@bumiller.com>  Sun, 24 Dec 2017 10:57:35 +0100
 
