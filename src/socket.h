@@ -1,7 +1,7 @@
 /*
  * netevent - low-level event-device sharing
  *
- * Copyright (C) 2017-2019 Wolfgang Bumiller <wry.git@bumiller.com>
+ * Copyright (C) 2017-2021 Wolfgang Bumiller <wry.git@bumiller.com>
  *
  * SPDX-License-Identifier: GPL-2.0-or-later
  */
