@@ -107,4 +107,4 @@ Host side:
     `$ netevent daemon -s netevent-setup.ne2 netevent-command.sock`
 
 You can now send additional commands to the daemon by connecting to the socket.
-For example via `socat READLINE netevent-command.sock`.
+For example via `socat READLINE UNIX-CONNECT:netevent-command.sock`.
