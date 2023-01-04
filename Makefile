@@ -67,7 +67,6 @@ install: # Make sure we use config.mak, nest once:
 	$(MAKE) install-do
 .PHONY: install-do
 install-do: $(BINARY) $(MAN1PAGES)
-	install -dm755 $(DESTDIR)
 	install -dm755 $(DESTDIR)$(BINDIR)
 	install -Tm755 $(BINARY) $(DESTDIR)$(BINDIR)/$(BINARY)
 ifeq ($(ENABLE_DOC), y)
