@@ -231,7 +231,7 @@ OutDevice::newFromNeteventStream(int fd)
 		}
 		// remember the absolute bits:
 		if (type.code == EV_ABS)
-			absbits = move(entrybits);
+			absbits = std::move(entrybits);
 	}
 
 	// netevent 1 dumps the key state, LED state and SW state at this point
@@ -361,7 +361,7 @@ OutDevice::newFromNE2AddCommand(int fd, NE2Packet& pkt, bool skip)
 		}
 
 		if (ev.index() == EV_ABS)
-			absbits = move(entrybits);
+			absbits = std::move(entrybits);
 	}
 
 	struct {

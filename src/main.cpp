@@ -697,7 +697,7 @@ cmd_create(int argc, char **argv)
 			if (optDuplicates == DuplicateMode::Replace) {
 				auto dev =
 				    OutDevice::newFromNE2AddCommand(infd, pkt);
-				devices[pkt.add_device.id] = move(dev);
+				devices[pkt.add_device.id] = std::move(dev);
 				break;
 			}
 
@@ -705,7 +705,7 @@ cmd_create(int argc, char **argv)
 			if (old == devices.end()) {
 				auto dev =
 				    OutDevice::newFromNE2AddCommand(infd, pkt);
-				devices[pkt.add_device.id] = move(dev);
+				devices[pkt.add_device.id] = std::move(dev);
 				break;
 			}
 

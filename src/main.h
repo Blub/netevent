@@ -31,8 +31,6 @@
 #include <memory>
 #include <functional>
 
-using std::move;
-
 #include "config.h"
 #include "types.h"
 #include "iohandle.h"

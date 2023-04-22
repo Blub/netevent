@@ -14,8 +14,8 @@ InDevice::InDevice(InDevice&& o)
 	, eof_(o.eof_)
 	, grabbing_(o.grabbing_)
 	, user_dev_(o.user_dev_)
-	, name_(move(o.name_))
-	, evbits_(move(o.evbits_))
+	, name_(std::move(o.name_))
+	, evbits_(std::move(o.evbits_))
 {
 	o.fd_ = -1;
 }

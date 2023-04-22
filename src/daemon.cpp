@@ -227,7 +227,7 @@ finishClientRemoval(int fd) {
 static void
 queueCommand(int clientfd, string line)
 {
-	gCommandQueue.emplace_back(Command{clientfd, move(line)});
+	gCommandQueue.emplace_back(Command{clientfd, std::move(line)});
 }
 
 
@@ -281,7 +281,7 @@ newCommandClient(Socket& server)
 		[fd]() { disconnectClient(fd); },
 		[fd]() { finishClientRemoval(fd); },
 	};
-	gCommandClients.emplace(fd, move(bufhandle));
+	gCommandClients.emplace(fd, std::move(bufhandle));
 }
 
 #pragma clang diagnostic push
@@ -522,7 +522,7 @@ addDevice(const string& name, const char *path)
 			},
 			[=]() { finishDeviceRemoval(weakdevptr); },
 		};
-		gInputs.emplace(name, move(input));
+		gInputs.emplace(name, std::move(input));
 	} catch (const std::exception&) {
 		freeInputID(id);
 		throw;
@@ -575,7 +575,7 @@ addOutput_Finish(const string& name, IOHandle handle, bool skip_announce)
 	writeHello(fd);
 	if (!skip_announce)
 		announceAllDevices(fd);
-	gOutputs.emplace(name, move(handle));
+	gOutputs.emplace(name, std::move(handle));
 	gFDCBs.emplace(fd, FDCallbacks {
 		[fd]() {
 			::fprintf(stderr, "onRead on output");
@@ -665,7 +665,7 @@ addOutput(const string& name, const char *path, bool skip_announce)
 	else
 		handle = addOutput_Open(path);
 
-	return addOutput_Finish(name, move(handle), skip_announce);
+	return addOutput_Finish(name, std::move(handle), skip_announce);
 }
 
 static void
@@ -727,7 +727,7 @@ addHotkey(uint16_t device, uint16_t type, uint16_t code, int32_t value,
 		throw MsgException("unknown event type: %u", type);
 
 
-	gHotkeys[HotkeyDef{device, type, code, value}] = move(command);
+	gHotkeys[HotkeyDef{device, type, code, value}] = std::move(command);
 }
 
 static void
@@ -1081,7 +1081,7 @@ clientCommand_Action(int clientfd, const vector<string>& args)
 		else
 			toClient(clientfd, "added on-'%s' command\n",
 			         action.c_str());
-		gEventCommands[action] = move(cmdstring);
+		gEventCommands[action] = std::move(cmdstring);
 	}
 	else
 		throw MsgException("'action': unknown subcommand: %s",
@@ -1209,7 +1209,7 @@ parseClientCommand(int clientfd, const char *cmd, size_t length)
 			}
 		} while (*cmd && !isWhite(*cmd) && (escape || *cmd != ';'));
 		arg.append(beg, cmd);
-		args.emplace_back(move(arg));
+		args.emplace_back(std::move(arg));
 		escape = false;
 	}
 

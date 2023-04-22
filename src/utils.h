@@ -9,7 +9,7 @@
 
 struct ScopeGuard {
 	ScopeGuard() = delete;
-	ScopeGuard(ScopeGuard&& o) : f_(move(o.f_)) {}
+	ScopeGuard(ScopeGuard&& o) : f_(std::move(o.f_)) {}
 	ScopeGuard(const ScopeGuard&) = delete;
 	ScopeGuard(std::function<void()> f) : f_(f) {}
 	~ScopeGuard() { f_(); }
@@ -19,7 +19,7 @@ struct ScopeGuard {
 struct ScopeGuardHelper { // actually gets rid of an unused-variable warning
 	constexpr ScopeGuardHelper() {}
 	ScopeGuard operator+(std::function<void()> f) {
-		return {move(f)};
+		return {std::move(f)};
 	}
 };
 #define NE2_CPP_CAT_INDIR(X,Y) X ## Y
