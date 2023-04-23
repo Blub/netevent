@@ -6,6 +6,7 @@
  * SPDX-License-Identifier: GPL-2.0-or-later
  */
 #include "socket.h"
+#include <cstdint>
 #include <sys/socket.h>
 #include <sys/un.h>
 
