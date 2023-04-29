@@ -1,3 +1,7 @@
+# Release 2.2.2
+
+This is a maintenance release to fix builds with newer compilers.
+
 # Release 2.2.1
 
 * add `-V`/`--version` command line option. (#22)

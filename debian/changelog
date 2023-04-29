@@ -1,3 +1,9 @@
+netevent (2.2.2-1) unreleased; urgency=medium
+
+  * Maintenance release to fix builds with newer stricter compilers.
+
+ -- Wolfgang Bumiller <wry.git@bumiller.com>  Sun, 24 Dec 2017 10:57:35 +0100
+
 netevent (2.2.1-1) unreleased; urgency=medium
 
   * Writing outputs and grabbing input is now managed separately.
