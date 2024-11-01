@@ -99,8 +99,14 @@ InDevice::read(InputEvent *out)
 		throw ErrnoException("failed to read from device");
 	}
 
+#ifdef input_event_sec
+	out->tv_sec = uint64_t(ev.input_event_sec);
+	out->tv_usec = uint32_t(ev.input_event_usec);
+#else
 	out->tv_sec = uint64_t(ev.time.tv_sec);
 	out->tv_usec = uint32_t(ev.time.tv_usec);
+#endif
+
 	out->type = ev.type;
 	out->code = ev.code;
 	out->value = ev.value;

@@ -426,8 +426,15 @@ OutDevice::write(const InputEvent& ie)
 	if (ie.type == EV_FF)
 		return;
 	struct input_event ev;
+
+#ifdef input_event_sec
+	ev.input_event_sec = time_t(ie.tv_sec);
+	ev.input_event_usec = ie.tv_usec;
+#else
 	ev.time.tv_sec = time_t(ie.tv_sec);
 	ev.time.tv_usec = ie.tv_usec;
+#endif
+
 	ev.type = ie.type;
 	ev.code = ie.code;
 	ev.value = ie.value;
