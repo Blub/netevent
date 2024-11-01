@@ -6,6 +6,8 @@
  * SPDX-License-Identifier: GPL-2.0-or-later
  */
 #pragma once
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wunsafe-buffer-usage"
 
 struct ScopeGuard {
 	ScopeGuard() = delete;
@@ -42,8 +44,11 @@ mustRead(int fd, void *buf, size_t length)
 			errno = EFAULT;
 			return false;
 		}
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wunsafe-buffer-usage"
 		buf = reinterpret_cast<void*>(
 		    reinterpret_cast<uint8_t*>(buf) + got);
+#pragma clang diagnostic pop
 		length -= size_t(got);
 	}
 	return true;
@@ -72,3 +77,5 @@ join(char c, Iter&& i, Iter&& end)
 	}
 	return s;
 }
+
+#pragma clang diagnostic pop

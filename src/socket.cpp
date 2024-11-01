@@ -10,6 +10,9 @@
 #include <sys/socket.h>
 #include <sys/un.h>
 
+// see main.h
+#pragma clang diagnostic ignored "-Wunsafe-buffer-usage"
+
 Socket::~Socket()
 {
 	this->close();

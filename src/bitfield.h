@@ -151,7 +151,10 @@ Bits::BitAccess::index() const
 inline
 Bits::BitAccess::operator bool() const
 {
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wunsafe-buffer-usage"
 	return owner_->data_[index_/8] & (1<<(index_&7));
+#pragma clang diagnostic pop
 }
 
 // iterating should include the iterator...
@@ -164,10 +167,13 @@ Bits::BitAccess::operator*()
 inline Bits::BitAccess&
 Bits::BitAccess::operator=(bool on)
 {
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wunsafe-buffer-usage"
 	if (on)
 		owner_->data_[index_/8] |= (1<<(index_&7));
 	else
 		owner_->data_[index_/8] &= ~(1<<(index_&7));
+#pragma clang diagnostic pop
 	return (*this);
 }
 

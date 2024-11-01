@@ -38,6 +38,11 @@
 #include "bitfield.h"
 #include "utils.h"
 
+// Until c++23 is everywhere available and I give a damn about dealing with
+// this... just shut up... I don't keep up with this stuff anymore, I write
+// mostly rust code nowadays...
+#pragma clang diagnostic ignored "-Wunsafe-buffer-usage"
+
 #define Packed __attribute__((packed))
 
 #define LONG_BITS (sizeof(long) * 8)

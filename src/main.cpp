@@ -15,6 +15,8 @@ using std::map;
 
 #include "main.h"
 
+#pragma clang diagnostic ignored "-Wunsafe-buffer-usage"
+
 const char*
 Exception::what() const noexcept {
 	return msg_;

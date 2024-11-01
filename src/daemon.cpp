@@ -21,6 +21,8 @@ using std::map;
 
 #include "main.h"
 
+#pragma clang diagnostic ignored "-Wunsafe-buffer-usage"
+
 #define OUTPUT_CHANGED_EVENT "output-changed"
 #define DEVICE_LOST_EVENT    "device-lost"
 #define GRAB_CHANGED_EVENT   "grab-changed"
