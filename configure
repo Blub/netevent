@@ -59,7 +59,7 @@ absdirname()
 
 SOURCEDIR=`absdirname $0`
 
-NETEVENT_VERSION="$(sed -ne '/^# Release/{s/^# Release\s*//;p;q}' "$SOURCEDIR/ChangeLog.md")"
+NETEVENT_VERSION="$(sed -ne '/^# Release/{ s/^# Release[ \t]*[\t ]*//;p;q; }' "$SOURCEDIR/ChangeLog.md")"
 
 PREFIX="${PREFIX:-/usr/local}"
 BINDIR="${BINDIR:-${PREFIX}/bin}"
