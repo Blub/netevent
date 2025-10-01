@@ -787,7 +787,6 @@ cmd_command(int argc, char **argv)
 	if (sockname[0] == '@')
 		sock.connectUnix<true>(&sockname[1]);
 	else {
-		(void)::unlink(sockname);
 		sock.connectUnix<false>(sockname);
 	}
 
