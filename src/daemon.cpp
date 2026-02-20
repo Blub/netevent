@@ -1349,12 +1349,17 @@ cmd_daemon(int argc, char **argv)
 	pfds.resize(1);
 	pfds[0].fd = server.fd();
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wmissing-noreturn"
 	gFDCBs[server.fd()] = FDCallbacks {
 		[&]() { newCommandClient(server); },
 		[ ]() { gQuit = true; },
 		[ ]() { gQuit = true; },
+		// When updating to c++23 this can be
+		// [ ] [[noreturn]] () { ... }
 		[ ]() { throw Exception("removed server socket"); },
 	};
+#pragma clang diagnostic pop
 
 	for (auto& i: pfds) {
 		i.events = POLLIN | POLLHUP | POLLERR;
