@@ -1,3 +1,35 @@
+
+<div align="right">
+  <details>
+    <summary >🌐 Language</summary>
+    <div>
+      <div align="center">
+        <a href="https://openaitx.github.io/view.html?user=Blub&project=netevent&lang=en">English</a>
+        | <a href="https://openaitx.github.io/view.html?user=Blub&project=netevent&lang=zh-CN">简体中文</a>
+        | <a href="https://openaitx.github.io/view.html?user=Blub&project=netevent&lang=zh-TW">繁體中文</a>
+        | <a href="https://openaitx.github.io/view.html?user=Blub&project=netevent&lang=ja">日本語</a>
+        | <a href="https://openaitx.github.io/view.html?user=Blub&project=netevent&lang=ko">한국어</a>
+        | <a href="https://openaitx.github.io/view.html?user=Blub&project=netevent&lang=hi">हिन्दी</a>
+        | <a href="https://openaitx.github.io/view.html?user=Blub&project=netevent&lang=th">ไทย</a>
+        | <a href="https://openaitx.github.io/view.html?user=Blub&project=netevent&lang=fr">Français</a>
+        | <a href="https://openaitx.github.io/view.html?user=Blub&project=netevent&lang=de">Deutsch</a>
+        | <a href="https://openaitx.github.io/view.html?user=Blub&project=netevent&lang=es">Español</a>
+        | <a href="https://openaitx.github.io/view.html?user=Blub&project=netevent&lang=it">Italiano</a>
+        | <a href="https://openaitx.github.io/view.html?user=Blub&project=netevent&lang=ru">Русский</a>
+        | <a href="https://openaitx.github.io/view.html?user=Blub&project=netevent&lang=pt">Português</a>
+        | <a href="https://openaitx.github.io/view.html?user=Blub&project=netevent&lang=nl">Nederlands</a>
+        | <a href="https://openaitx.github.io/view.html?user=Blub&project=netevent&lang=pl">Polski</a>
+        | <a href="https://openaitx.github.io/view.html?user=Blub&project=netevent&lang=ar">العربية</a>
+        | <a href="https://openaitx.github.io/view.html?user=Blub&project=netevent&lang=fa">فارسی</a>
+        | <a href="https://openaitx.github.io/view.html?user=Blub&project=netevent&lang=tr">Türkçe</a>
+        | <a href="https://openaitx.github.io/view.html?user=Blub&project=netevent&lang=vi">Tiếng Việt</a>
+        | <a href="https://openaitx.github.io/view.html?user=Blub&project=netevent&lang=id">Bahasa Indonesia</a>
+        | <a href="https://openaitx.github.io/view.html?user=Blub&project=netevent&lang=as">অসমীয়া</
+      </div>
+    </div>
+  </details>
+</div>
+
 # netevent
 
 Netevent is a tool which can be used to share linux event devices with other
